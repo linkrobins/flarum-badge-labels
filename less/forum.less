@@ -1,0 +1,198 @@
+// Link Robins Badge Labels
+//
+// Two things happen here:
+//   1. the badge list becomes a real list of icon + title rows instead of a
+//      packed strip of overlapping icons, and
+//   2. it moves, either into a widened author column ("below") or up beside the
+//      username ("beside").
+//
+// The two majors size the author column differently: 2.x reads the CSS custom
+// property --avatar-column-width, while 1.x compiles an 85px LESS variable into
+// each rule that needs it. The .lrBadgeLabels--v1 / --v2 classes on the root
+// element keep those apart. Everything else is shared.
+//
+// The classes this file keys off are all set on <html> by the forum bundle:
+//   --labels     show badge titles
+//   --postCount  show the author's post count
+//   --below      badges under the avatar
+//   --beside     badges next to the username
+//   --wide       the author column has to make room for the above
+//   --phone      apply on phones as well
+//   --v1 / --v2  which Flarum major we are on
+
+@lrbl-column-width: var(--lrbl-column-width, 150px);
+
+// The title beside a badge. It picks up the badge's own colour, so it has to
+// carry its own text colour (set by the bundle from the badge's luminance)
+// instead of inheriting the theme's.
+.LrBadgeLabels-label {
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: ~"calc(12px * var(--lr-ui-scale, 1))";
+  font-weight: 600;
+  line-height: 20px;
+  background: var(--lrbl-accent, var(--control-bg));
+  color: var(--control-color);
+}
+
+.LrBadgeLabels-label--onLight {
+  color: #2b2b2b;
+}
+
+.LrBadgeLabels-label--onDark {
+  color: #fff;
+}
+
+.LrBadgeLabels-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: ~"calc(12px * var(--lr-ui-scale, 1))";
+  line-height: 20px;
+  color: var(--muted-color);
+}
+
+.LrBadgeLabels-countIcon {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+@media @tablet-up {
+  // Core packs the badges into a right-aligned, nowrap strip 64px wide, with
+  // each badge pulled over its neighbour. None of that survives a title.
+  .PostUser-badges.LrBadgeLabels-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    padding-inline-start: 0;
+    text-align: left;
+    white-space: normal;
+    pointer-events: auto;
+
+    .Badge {
+      margin-left: 0;
+      flex: 0 0 auto;
+    }
+
+    // Core styles the list items as `.badges > li`, which outranks a lone
+    // class, so these have to be reached through the list.
+    > .LrBadgeLabels-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  // Badges below the avatar: one row per badge, in the author column.
+  //
+  // Flarum floats this list into the author column at the height of the post
+  // header, which is where the badge icons get their overlapping-the-avatar
+  // look. Labels have nowhere to go there, so the list is pushed down past the
+  // avatar first.
+  .lrBadgeLabels--below {
+    .PostUser-badges.LrBadgeLabels-list {
+      flex-direction: column;
+      align-items: flex-start;
+      width: auto;
+      // Longer names ellipsis rather than run under the post body.
+      max-width: ~"calc(@{lrbl-column-width} - 15px)";
+      margin-top: var(--lrbl-avatar-offset, 70px);
+    }
+  }
+
+  // 2.x sizes the author column from a custom property, so widening it is one
+  // line and everything that reads it (the post grid, the time gaps) follows.
+  .lrBadgeLabels--v2.lrBadgeLabels--wide {
+    --avatar-column-width: var(--lrbl-column-width, 150px);
+  }
+
+  // 1.x has the width compiled in, so every rule that used it is redone here.
+  .lrBadgeLabels--v1.lrBadgeLabels--wide {
+    .Post {
+      padding-left: ~"calc(20px + @{lrbl-column-width})";
+    }
+
+    .PostUser-avatar {
+      left: ~"calc(0px - @{lrbl-column-width})";
+    }
+
+    .PostUser-badges {
+      margin-left: ~"calc(5px - @{lrbl-column-width})";
+    }
+
+    .EventPost-icon {
+      margin-left: ~"calc(0px - @{lrbl-column-width})";
+    }
+
+    .PostStream-timeGap {
+      padding-left: @lrbl-column-width;
+    }
+  }
+
+  // Badges beside the username: out of the author column entirely, so the
+  // column keeps the width Flarum gave it.
+  .lrBadgeLabels--beside {
+    .PostUser-badges.LrBadgeLabels-list {
+      display: inline-flex;
+      flex-direction: row;
+      float: none;
+      position: static;
+      vertical-align: middle;
+      width: auto;
+      max-width: none;
+      margin: 0 0 0 8px;
+      // Flarum nudges the packed icons up to sit on the avatar; on the header
+      // line they belong on the baseline with the username.
+      margin-top: 0;
+    }
+  }
+}
+
+@media @phone {
+  // Phones have no author column: Flarum tucks the badges over the avatar in a
+  // 32px strip, where titles and a post count have nowhere to go. They stay in
+  // the markup (one bundle, no width-dependent rendering) but stay hidden
+  // unless the admin asks for them.
+  html:not(.lrBadgeLabels--phone) {
+    .LrBadgeLabels-label,
+    .LrBadgeLabels-countItem {
+      display: none;
+    }
+  }
+
+  .lrBadgeLabels--phone {
+    .PostUser-badges.LrBadgeLabels-list {
+      position: static;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 6px;
+      width: auto;
+      margin: 6px 0 0;
+      padding-inline-start: 0;
+      text-align: left;
+      white-space: normal;
+      pointer-events: auto;
+
+      .Badge {
+        margin-left: 0;
+        flex: 0 0 auto;
+      }
+
+      > .LrBadgeLabels-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        max-width: 100%;
+      }
+    }
+  }
+}
