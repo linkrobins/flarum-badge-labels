@@ -221,20 +221,26 @@ function postCountItem(user) {
   const m = window.m;
   const count = typeof user.commentCount === 'function' ? user.commentCount() : null;
 
-  // Undefined on 1.x whenever the post count is switched off, since the
-  // attribute is only serialized while the setting is on.
   if (typeof count !== 'number' || isNaN(count)) return null;
 
+  // Built from the same two halves as a labelled badge, so it reads as one of
+  // them instead of as another piece of post metadata sitting next to the
+  // timestamp. It keeps the theme's neutral badge colour, though, so it can't
+  // be mistaken for a group someone belongs to.
   return m(
     'li',
     {
-      className: 'LrBadgeLabels-item LrBadgeLabels-countItem',
+      className: 'LrBadgeLabels-item LrBadgeLabels-item--labelled LrBadgeLabels-countItem',
       key: 'lrBadgeLabels-postCount',
     },
-    m('span', { className: 'LrBadgeLabels-count' }, [
-      m('i', { className: 'icon fas fa-comment LrBadgeLabels-countIcon', 'aria-hidden': 'true' }),
-      m('span', { className: 'LrBadgeLabels-countText' }, window.app.translator.trans(EXT_ID + '.forum.post_count', { count: count })),
-    ])
+    [
+      m('span', { className: 'Badge LrBadgeLabels-countBadge' }, m('i', { className: 'icon fas fa-comment Badge-icon', 'aria-hidden': 'true' })),
+      m(
+        'span',
+        { className: 'LrBadgeLabels-label LrBadgeLabels-countLabel' },
+        window.app.translator.trans(EXT_ID + '.forum.post_count', { count: count })
+      ),
+    ]
   );
 }
 

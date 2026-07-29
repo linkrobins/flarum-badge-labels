@@ -59,18 +59,11 @@
   color: #fff;
 }
 
-.LrBadgeLabels-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: ~"calc(12px * var(--lr-ui-scale, 1))";
-  line-height: @lrbl-pill-height;
-  color: var(--muted-color);
-}
-
-.LrBadgeLabels-countIcon {
-  font-size: 11px;
-  opacity: 0.8;
+// The post count is a pill of the same shape, on core's neutral badge colour
+// (the group badges bring their own), so it belongs to the badge set rather
+// than to the post metadata beside it.
+.LrBadgeLabels-countLabel {
+  font-weight: normal;
 }
 
 // The list itself, shared between tablet-and-up and the phone opt-in. Core
