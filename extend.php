@@ -21,8 +21,8 @@ return [
         ->default(Settings::LAYOUT, Settings::DEFAULT_LAYOUT)
         ->serializeToForum('linkrobinsBadgeLabelsLayout', Settings::LAYOUT, fn ($value) => Settings::layout($value))
 
-        ->default(Settings::TITLES, Settings::DEFAULT_TITLES)
-        ->serializeToForum('linkrobinsBadgeLabelsTitles', Settings::TITLES, fn ($value) => Settings::titles($value))
+        ->default(Settings::LABELS, '1')
+        ->serializeToForum('linkrobinsBadgeLabelsLabels', Settings::LABELS, fn ($value) => Settings::bool($value))
 
         ->default(Settings::POST_COUNT, '1')
         ->serializeToForum('linkrobinsBadgeLabelsPostCount', Settings::POST_COUNT, fn ($value) => Settings::bool($value))

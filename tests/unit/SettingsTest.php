@@ -42,35 +42,6 @@ class SettingsTest extends TestCase
     }
 
     #[Test]
-    public function known_title_modes_pass_through(): void
-    {
-        $this->assertEquals('always', Settings::titles('always'));
-        $this->assertEquals('expand', Settings::titles('expand'));
-        $this->assertEquals('off', Settings::titles('off'));
-        $this->assertEquals('expand', Settings::titles(' Expand '));
-    }
-
-    #[Test]
-    public function a_title_mode_saved_as_the_old_on_off_switch_still_reads(): void
-    {
-        // Before the expand-on-hover mode this setting was a checkbox, so a
-        // forum that saved one has to keep the behaviour it chose.
-        $this->assertEquals('always', Settings::titles('1'));
-        $this->assertEquals('always', Settings::titles(true));
-        $this->assertEquals('off', Settings::titles('0'));
-        $this->assertEquals('off', Settings::titles(''));
-        $this->assertEquals('off', Settings::titles(false));
-    }
-
-    #[Test]
-    public function an_unknown_title_mode_falls_back_to_the_default(): void
-    {
-        $this->assertEquals(Settings::DEFAULT_TITLES, Settings::titles('sometimes'));
-        $this->assertEquals(Settings::DEFAULT_TITLES, Settings::titles(null));
-        $this->assertEquals(Settings::DEFAULT_TITLES, Settings::titles(['expand']));
-    }
-
-    #[Test]
     public function the_column_width_is_clamped_to_a_usable_range(): void
     {
         // Narrower than the column Flarum ships would clip the avatar; wider

@@ -28,15 +28,10 @@ function settings() {
     },
     {
       setting: PREFIX + 'labels',
-      label: trans('titles_label'),
-      help: trans('titles_help'),
-      type: 'select',
-      options: {
-        always: trans('titles_always'),
-        expand: trans('titles_expand'),
-        off: trans('titles_off'),
-      },
-      default: 'always',
+      label: trans('labels_label'),
+      help: trans('labels_help'),
+      type: 'boolean',
+      default: true,
     },
     {
       setting: PREFIX + 'post_count',

@@ -66,45 +66,6 @@
   font-weight: normal;
 }
 
-// Expand-on-demand: titles stay rolled up inside their icon until the reader
-// hovers, taps or tabs to a badge, so a member with a lot of groups doesn't
-// take over the post. The post count is left alone, since the number is the
-// whole point of it.
-.lrBadgeLabels--expand {
-  .LrBadgeLabels-item--labelled:not(.LrBadgeLabels-countItem) {
-    cursor: pointer;
-
-    .LrBadgeLabels-label {
-      max-width: 0;
-      padding-left: 0;
-      padding-right: 0;
-      // Collapsing a pill by its width keeps the icon end perfectly still.
-      transition: max-width 0.2s ease, padding 0.2s ease, opacity 0.15s ease;
-      opacity: 0;
-    }
-
-    &:hover,
-    &:focus,
-    &:focus-within,
-    &.is-open {
-      .LrBadgeLabels-label {
-        max-width: 260px;
-        padding: 0 10px 0 6px;
-        opacity: 1;
-      }
-    }
-
-    &:focus {
-      outline: none;
-    }
-
-    &:focus-visible .Badge {
-      outline: 2px solid var(--link-color);
-      outline-offset: 1px;
-    }
-  }
-}
-
 // The beside layout renders the list from the post header, where none of core's
 // author-column rules apply and there is no column to sit in at any width. All
 // three classes are needed to outrank the list rules further down, which would

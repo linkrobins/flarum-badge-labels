@@ -43,7 +43,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('below', $attributes['linkrobinsBadgeLabelsLayout']);
-        $this->assertEquals('always', $attributes['linkrobinsBadgeLabelsTitles']);
+        $this->assertTrue($attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertTrue($attributes['linkrobinsBadgeLabelsPostCount']);
         $this->assertFalse($attributes['linkrobinsBadgeLabelsPhone']);
         $this->assertEquals(Settings::DEFAULT_COLUMN_WIDTH, $attributes['linkrobinsBadgeLabelsColumnWidth']);
@@ -53,7 +53,7 @@ class SettingsPayloadTest extends TestCase
     public function saved_settings_reach_the_frontend(): void
     {
         $this->setting(Settings::LAYOUT, 'beside');
-        $this->setting(Settings::TITLES, 'expand');
+        $this->setting(Settings::LABELS, '0');
         $this->setting(Settings::POST_COUNT, '0');
         $this->setting(Settings::PHONE, '1');
         $this->setting(Settings::COLUMN_WIDTH, '220');
@@ -61,7 +61,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('beside', $attributes['linkrobinsBadgeLabelsLayout']);
-        $this->assertEquals('expand', $attributes['linkrobinsBadgeLabelsTitles']);
+        $this->assertFalse($attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertFalse($attributes['linkrobinsBadgeLabelsPostCount']);
         $this->assertTrue($attributes['linkrobinsBadgeLabelsPhone']);
         $this->assertEquals(220, $attributes['linkrobinsBadgeLabelsColumnWidth']);
@@ -73,13 +73,11 @@ class SettingsPayloadTest extends TestCase
         // These values land in a class name and a CSS custom property, so they
         // are normalized on the way out rather than trusted as stored.
         $this->setting(Settings::LAYOUT, 'somewhere-else');
-        $this->setting(Settings::TITLES, 'sometimes');
         $this->setting(Settings::COLUMN_WIDTH, '9999');
 
         $attributes = $this->forumAttributes();
 
         $this->assertEquals(Settings::DEFAULT_LAYOUT, $attributes['linkrobinsBadgeLabelsLayout']);
-        $this->assertEquals(Settings::DEFAULT_TITLES, $attributes['linkrobinsBadgeLabelsTitles']);
         $this->assertEquals(Settings::MAX_COLUMN_WIDTH, $attributes['linkrobinsBadgeLabelsColumnWidth']);
     }
 }

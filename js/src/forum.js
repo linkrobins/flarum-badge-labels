@@ -19,8 +19,6 @@ const ATTR = 'linkrobinsBadgeLabels';
 
 const LAYOUTS = ['below', 'beside'];
 const DEFAULT_LAYOUT = 'below';
-const TITLE_MODES = ['always', 'expand', 'off'];
-const DEFAULT_TITLES = 'always';
 const DEFAULT_COLUMN_WIDTH = 150;
 const MIN_COLUMN_WIDTH = 85;
 const MAX_COLUMN_WIDTH = 400;
@@ -62,12 +60,11 @@ function settings() {
   if (cached) return cached;
 
   const layout = String(forumAttribute(ATTR + 'Layout', DEFAULT_LAYOUT));
-  const titles = String(forumAttribute(ATTR + 'Titles', DEFAULT_TITLES));
   const width = parseInt(forumAttribute(ATTR + 'ColumnWidth', DEFAULT_COLUMN_WIDTH), 10);
 
   cached = {
     layout: LAYOUTS.indexOf(layout) >= 0 ? layout : DEFAULT_LAYOUT,
-    titles: TITLE_MODES.indexOf(titles) >= 0 ? titles : DEFAULT_TITLES,
+    labels: truthy(forumAttribute(ATTR + 'Labels', true)),
     postCount: truthy(forumAttribute(ATTR + 'PostCount', true)),
     phone: truthy(forumAttribute(ATTR + 'Phone', false)),
     columnWidth: Math.max(MIN_COLUMN_WIDTH, Math.min(MAX_COLUMN_WIDTH, isNaN(width) ? DEFAULT_COLUMN_WIDTH : width)),
@@ -93,10 +90,7 @@ function applyRootClasses() {
 
   const classes = ['lrBadgeLabels'];
 
-  if (s.titles !== 'off') classes.push('lrBadgeLabels--labels');
-  // Titles stay collapsed until the reader hovers or taps a badge, so a member
-  // with a lot of groups doesn't take over the post.
-  if (s.titles === 'expand') classes.push('lrBadgeLabels--expand');
+  if (s.labels) classes.push('lrBadgeLabels--labels');
   if (s.postCount) classes.push('lrBadgeLabels--postCount');
   if (s.phone) classes.push('lrBadgeLabels--phone');
 
@@ -179,25 +173,13 @@ function labelFor(badge) {
   return { content: label, color: typeof attrs.color === 'string' ? attrs.color : '', title: typeof label === 'string' ? label : undefined };
 }
 
-// In expand mode only one title is open at a time, forum-wide: opening another
-// closes this one, and so does a tap anywhere else. Kept as state rather than a
-// DOM class so a redraw can't lose it.
-let openBadge = null;
-
-function setOpenBadge(id) {
-  if (openBadge === id) return false;
-  openBadge = id;
-  return true;
-}
-
 // Rebuild the badge list, wrapping each badge the way core's listItems() does
 // (same item- class and key, so other extensions' styles keep matching) and
 // adding the label beside it.
-function badgeItems(user, post, withLabels, expandable) {
+function badgeItems(user, withLabels) {
   const m = window.m;
   const list = user.badges();
   const badges = list && typeof list.toArray === 'function' ? list.toArray() : [];
-  const postId = post && typeof post.id === 'function' ? post.id() : '';
 
   return badges
     .filter((badge) => badge)
@@ -205,8 +187,6 @@ function badgeItems(user, post, withLabels, expandable) {
       const name = badge.itemName;
       const key = (badge.attrs && badge.attrs.key) || name || 'badge' + index;
       const label = withLabels ? labelFor(badge) : null;
-      const id = postId + ':' + key;
-      const open = expandable && !!label && openBadge === id;
 
       const children = [badge];
 
@@ -227,28 +207,9 @@ function badgeItems(user, post, withLabels, expandable) {
       const attrs = {
         // The labelled marker is what lets the stylesheet join the icon and
         // the title into one pill; a badge with no title keeps its circle.
-        className: 'LrBadgeLabels-item' + (label ? ' LrBadgeLabels-item--labelled' : '') + (open ? ' is-open' : '') + (name ? ' item-' + name : ''),
+        className: 'LrBadgeLabels-item' + (label ? ' LrBadgeLabels-item--labelled' : '') + (name ? ' item-' + name : ''),
         key: key,
       };
-
-      // Hover opens a title on a mouse; touch has no hover, so the badge also
-      // answers to a tap (and to a keyboard, since it is focusable once it
-      // does something when activated).
-      if (expandable && label) {
-        const toggle = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpenBadge(open ? null : id);
-        };
-
-        attrs.role = 'button';
-        attrs.tabindex = 0;
-        attrs['aria-expanded'] = open ? 'true' : 'false';
-        attrs.onclick = toggle;
-        attrs.onkeydown = (e) => {
-          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') toggle(e);
-        };
-      }
 
       return m('li', attrs, children);
     });
@@ -289,7 +250,7 @@ function badgeList(user, post, variant) {
   const m = window.m;
   const s = settings();
 
-  const children = badgeItems(user, post, s.titles !== 'off', s.titles === 'expand');
+  const children = badgeItems(user, s.labels);
 
   if (s.postCount) {
     const count = postCountItem(user);
@@ -299,7 +260,7 @@ function badgeList(user, post, variant) {
   if (!children.length) return null;
 
   // badges--packed (the overlapping-icon strip) is kept so phones still get
-  // Flarum's compact header when the admin hasn't opted into titles there; the
+  // Flarum's compact header when the admin hasn't opted into labels there; the
   // stylesheet unpacks the list everywhere it does apply.
   const className = 'PostUser-badges badges badges--packed LrBadgeLabels-list' + (variant === 'header' ? ' LrBadgeLabels-list--header' : '');
 
@@ -343,15 +304,6 @@ function extendMethod(proto, method, callback) {
 window.app.initializers.add(EXT_ID, () => {
   applyRootClasses();
 
-  // An open title closes when the reader taps or clicks anywhere that isn't a
-  // badge. The badges stop their own events, so anything arriving here is
-  // somewhere else on the page.
-  if (settings().titles === 'expand') {
-    document.addEventListener('click', () => {
-      if (openBadge !== null && setOpenBadge(null)) window.m.redraw();
-    });
-  }
-
   onCoreModule('forum/components/PostUser', (PostUser) => {
     if (!PostUser || !PostUser.prototype) return;
 
@@ -390,16 +342,6 @@ window.app.initializers.add(EXT_ID, () => {
     if (!CommentPost || !CommentPost.prototype) return;
     if (CommentPost.prototype._lrBadgeLabelsPatched) return;
     CommentPost.prototype._lrBadgeLabelsPatched = true;
-
-    // A post only re-renders when something it watches changes (both majors
-    // retain the subtree otherwise), so opening a title has to be one of the
-    // things it watches, or the tap would redraw nothing.
-    extendMethod(CommentPost.prototype, 'oninit', function () {
-      if (settings().titles !== 'expand') return;
-      if (this.subtree && typeof this.subtree.check === 'function') {
-        this.subtree.check(() => openBadge);
-      }
-    });
 
     extendMethod(CommentPost.prototype, 'headerItems', function (items) {
       const s = settings();
