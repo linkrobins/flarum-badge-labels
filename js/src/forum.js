@@ -207,7 +207,9 @@ function badgeItems(user, withLabels) {
       return m(
         'li',
         {
-          className: 'LrBadgeLabels-item' + (name ? ' item-' + name : ''),
+          // The labelled marker is what lets the stylesheet join the icon and
+          // the title into one pill; a badge with no title keeps its circle.
+          className: 'LrBadgeLabels-item' + (label ? ' LrBadgeLabels-item--labelled' : '') + (name ? ' item-' + name : ''),
           key: key,
         },
         children
