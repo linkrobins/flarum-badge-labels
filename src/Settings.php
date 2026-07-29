@@ -17,7 +17,7 @@ final class Settings
     public const PREFIX = 'linkrobins-badge-labels.';
 
     public const LAYOUT = self::PREFIX.'layout';
-    public const LABELS = self::PREFIX.'labels';
+    public const TITLES = self::PREFIX.'labels';
     public const POST_COUNT = self::PREFIX.'post_count';
     public const PHONE = self::PREFIX.'phone';
     public const COLUMN_WIDTH = self::PREFIX.'column_width';
@@ -34,6 +34,14 @@ final class Settings
     public const LAYOUTS = ['below', 'beside'];
 
     public const DEFAULT_LAYOUT = 'below';
+
+    /**
+     * How much of a badge is shown: its title always, only its icon until the
+     * reader hovers or taps it, or its icon alone.
+     */
+    public const TITLE_MODES = ['always', 'expand', 'off'];
+
+    public const DEFAULT_TITLES = 'always';
 
     public const DEFAULT_COLUMN_WIDTH = 150;
 
@@ -53,6 +61,26 @@ final class Settings
         $layout = is_string($value) ? strtolower(trim($value)) : '';
 
         return in_array($layout, self::LAYOUTS, true) ? $layout : self::DEFAULT_LAYOUT;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public static function titles($value): string
+    {
+        // This was an on/off switch before the expand-on-hover mode existed,
+        // so a stored boolean still reads as the setting the admin picked.
+        if ($value === true || $value === 1 || $value === '1' || $value === 'true') {
+            return 'always';
+        }
+
+        if ($value === false || $value === 0 || $value === '0' || $value === '') {
+            return 'off';
+        }
+
+        $titles = is_string($value) ? strtolower(trim($value)) : '';
+
+        return in_array($titles, self::TITLE_MODES, true) ? $titles : self::DEFAULT_TITLES;
     }
 
     /**

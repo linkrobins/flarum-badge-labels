@@ -8,9 +8,10 @@ Out of the box Flarum shows badges as small icons tucked over the corner of the 
 
 ## What it does
 
-- **Full badge titles.** Each badge gets its name beside its icon, in a pill that picks up the badge's own colour with readable text on light and dark badges alike.
-- **Badge placement.** Put the badges in a column below the avatar (the author column widens to make room), or on the post header line beside the username.
-- **Post count.** Optionally show how many posts the author has written, under their badges.
+- **Full badge titles.** Each badge becomes one pill: its icon at the rounded left end, its name at the right, in the badge's own colour with readable text on light and dark badges alike.
+- **Or titles on demand.** Badges can instead show just their icon and expand to their full title when a reader hovers over one, or taps it on a phone. One at a time, so members in a lot of groups don't take over the post.
+- **Badge placement.** Put the badges in a column below the avatar (the author column widens to make room), or on the post header line beside the username, where they follow the timestamp.
+- **Post count.** Optionally show how many posts the author has written, as a pill of its own in the theme's neutral badge colour, so it is never mistaken for a group.
 - **Phones.** Off by default there, since phones show a compact post header. One switch turns it on.
 
 Every badge is covered, not just group badges: the title comes from whatever each badge already tells Flarum its name is, so badges added by other extensions get labelled too. Badges that have no name are left as plain icons.
@@ -20,7 +21,7 @@ Every badge is covered, not just group badges: the title comes from whatever eac
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Badge placement | Below the avatar | Below the avatar, or beside the username |
-| Show full badge titles | On | The badge names themselves |
+| Badge titles | Always show the title | Always, expand on hover or tap, or icon only |
 | Show the author's post count | On | The number of posts under the badges |
 | Author column width | 150px | How much room the badges get. Only used by the below-the-avatar placement (85 to 400) |
 | Apply on phones too | Off | Show titles and the post count on phones as well |

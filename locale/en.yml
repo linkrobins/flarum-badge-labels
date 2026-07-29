@@ -12,8 +12,11 @@ linkrobins-badge-labels:
       layout_below: Below the avatar
       layout_beside: Beside the username
 
-      labels_label: Show full badge titles
-      labels_help: Show each badge's name next to its icon instead of the icon on its own.
+      titles_label: Badge titles
+      titles_help: How much of each badge is shown. Expanding on hover keeps the post tidy when members are in a lot of groups, and readers on phones tap a badge instead of hovering.
+      titles_always: Always show the title
+      titles_expand: Show the icon, expand on hover or tap
+      titles_off: Show the icon only
 
       post_count_label: Show the author's post count
       post_count_help: Adds the number of posts the author has written, under their badges.

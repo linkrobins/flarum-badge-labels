@@ -66,6 +66,59 @@
   font-weight: normal;
 }
 
+// Expand-on-demand: titles stay rolled up inside their icon until the reader
+// hovers, taps or tabs to a badge, so a member with a lot of groups doesn't
+// take over the post. The post count is left alone, since the number is the
+// whole point of it.
+.lrBadgeLabels--expand {
+  .LrBadgeLabels-item--labelled:not(.LrBadgeLabels-countItem) {
+    cursor: pointer;
+
+    .LrBadgeLabels-label {
+      max-width: 0;
+      padding-left: 0;
+      padding-right: 0;
+      // Collapsing a pill by its width keeps the icon end perfectly still.
+      transition: max-width 0.2s ease, padding 0.2s ease, opacity 0.15s ease;
+      opacity: 0;
+    }
+
+    &:hover,
+    &:focus,
+    &:focus-within,
+    &.is-open {
+      .LrBadgeLabels-label {
+        max-width: 260px;
+        padding: 0 10px 0 6px;
+        opacity: 1;
+      }
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible .Badge {
+      outline: 2px solid var(--link-color);
+      outline-offset: 1px;
+    }
+  }
+}
+
+// The beside layout renders the list from the post header, where none of core's
+// author-column rules apply and there is no column to sit in at any width. All
+// three classes are needed to outrank the list rules further down, which would
+// otherwise make this block-level and push it onto its own line.
+.PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--header {
+  position: static;
+  float: none;
+  display: inline-flex;
+  vertical-align: middle;
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+
 // The list itself, shared between tablet-and-up and the phone opt-in. Core
 // packs the badges into a right-aligned, nowrap strip 64px wide with each badge
 // pulled over its neighbour, and none of that survives a title.
@@ -163,23 +216,6 @@
     }
   }
 
-  // Badges beside the username: out of the author column entirely, so the
-  // column keeps the width Flarum gave it.
-  .lrBadgeLabels--beside {
-    .PostUser-badges.LrBadgeLabels-list {
-      display: inline-flex;
-      flex-direction: row;
-      float: none;
-      position: static;
-      vertical-align: middle;
-      width: auto;
-      max-width: none;
-      margin: 0 0 0 8px;
-      // Flarum nudges the packed icons up to sit on the avatar; on the header
-      // line they belong on the baseline with the username.
-      margin-top: 0;
-    }
-  }
 }
 
 @media @phone {

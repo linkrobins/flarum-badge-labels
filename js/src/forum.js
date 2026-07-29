@@ -19,6 +19,8 @@ const ATTR = 'linkrobinsBadgeLabels';
 
 const LAYOUTS = ['below', 'beside'];
 const DEFAULT_LAYOUT = 'below';
+const TITLE_MODES = ['always', 'expand', 'off'];
+const DEFAULT_TITLES = 'always';
 const DEFAULT_COLUMN_WIDTH = 150;
 const MIN_COLUMN_WIDTH = 85;
 const MAX_COLUMN_WIDTH = 400;
@@ -60,11 +62,12 @@ function settings() {
   if (cached) return cached;
 
   const layout = String(forumAttribute(ATTR + 'Layout', DEFAULT_LAYOUT));
+  const titles = String(forumAttribute(ATTR + 'Titles', DEFAULT_TITLES));
   const width = parseInt(forumAttribute(ATTR + 'ColumnWidth', DEFAULT_COLUMN_WIDTH), 10);
 
   cached = {
     layout: LAYOUTS.indexOf(layout) >= 0 ? layout : DEFAULT_LAYOUT,
-    labels: truthy(forumAttribute(ATTR + 'Labels', true)),
+    titles: TITLE_MODES.indexOf(titles) >= 0 ? titles : DEFAULT_TITLES,
     postCount: truthy(forumAttribute(ATTR + 'PostCount', true)),
     phone: truthy(forumAttribute(ATTR + 'Phone', false)),
     columnWidth: Math.max(MIN_COLUMN_WIDTH, Math.min(MAX_COLUMN_WIDTH, isNaN(width) ? DEFAULT_COLUMN_WIDTH : width)),
@@ -90,7 +93,10 @@ function applyRootClasses() {
 
   const classes = ['lrBadgeLabels'];
 
-  if (s.labels) classes.push('lrBadgeLabels--labels');
+  if (s.titles !== 'off') classes.push('lrBadgeLabels--labels');
+  // Titles stay collapsed until the reader hovers or taps a badge, so a member
+  // with a lot of groups doesn't take over the post.
+  if (s.titles === 'expand') classes.push('lrBadgeLabels--expand');
   if (s.postCount) classes.push('lrBadgeLabels--postCount');
   if (s.phone) classes.push('lrBadgeLabels--phone');
 
@@ -173,13 +179,25 @@ function labelFor(badge) {
   return { content: label, color: typeof attrs.color === 'string' ? attrs.color : '', title: typeof label === 'string' ? label : undefined };
 }
 
+// In expand mode only one title is open at a time, forum-wide: opening another
+// closes this one, and so does a tap anywhere else. Kept as state rather than a
+// DOM class so a redraw can't lose it.
+let openBadge = null;
+
+function setOpenBadge(id) {
+  if (openBadge === id) return false;
+  openBadge = id;
+  return true;
+}
+
 // Rebuild the badge list, wrapping each badge the way core's listItems() does
 // (same item- class and key, so other extensions' styles keep matching) and
 // adding the label beside it.
-function badgeItems(user, withLabels) {
+function badgeItems(user, post, withLabels, expandable) {
   const m = window.m;
   const list = user.badges();
   const badges = list && typeof list.toArray === 'function' ? list.toArray() : [];
+  const postId = post && typeof post.id === 'function' ? post.id() : '';
 
   return badges
     .filter((badge) => badge)
@@ -187,6 +205,8 @@ function badgeItems(user, withLabels) {
       const name = badge.itemName;
       const key = (badge.attrs && badge.attrs.key) || name || 'badge' + index;
       const label = withLabels ? labelFor(badge) : null;
+      const id = postId + ':' + key;
+      const open = expandable && !!label && openBadge === id;
 
       const children = [badge];
 
@@ -204,16 +224,33 @@ function badgeItems(user, withLabels) {
         );
       }
 
-      return m(
-        'li',
-        {
-          // The labelled marker is what lets the stylesheet join the icon and
-          // the title into one pill; a badge with no title keeps its circle.
-          className: 'LrBadgeLabels-item' + (label ? ' LrBadgeLabels-item--labelled' : '') + (name ? ' item-' + name : ''),
-          key: key,
-        },
-        children
-      );
+      const attrs = {
+        // The labelled marker is what lets the stylesheet join the icon and
+        // the title into one pill; a badge with no title keeps its circle.
+        className: 'LrBadgeLabels-item' + (label ? ' LrBadgeLabels-item--labelled' : '') + (open ? ' is-open' : '') + (name ? ' item-' + name : ''),
+        key: key,
+      };
+
+      // Hover opens a title on a mouse; touch has no hover, so the badge also
+      // answers to a tap (and to a keyboard, since it is focusable once it
+      // does something when activated).
+      if (expandable && label) {
+        const toggle = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpenBadge(open ? null : id);
+        };
+
+        attrs.role = 'button';
+        attrs.tabindex = 0;
+        attrs['aria-expanded'] = open ? 'true' : 'false';
+        attrs.onclick = toggle;
+        attrs.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') toggle(e);
+        };
+      }
+
+      return m('li', attrs, children);
     });
 }
 
@@ -242,6 +279,31 @@ function postCountItem(user) {
       ),
     ]
   );
+}
+
+// The whole list: every badge, then the post count. `variant` says where it is
+// being rendered, since the beside layout puts it in the post header rather
+// than in the author column, and core's own .PostUser-badges rules only make
+// sense in the latter.
+function badgeList(user, post, variant) {
+  const m = window.m;
+  const s = settings();
+
+  const children = badgeItems(user, post, s.titles !== 'off', s.titles === 'expand');
+
+  if (s.postCount) {
+    const count = postCountItem(user);
+    if (count) children.push(count);
+  }
+
+  if (!children.length) return null;
+
+  // badges--packed (the overlapping-icon strip) is kept so phones still get
+  // Flarum's compact header when the admin hasn't opted into titles there; the
+  // stylesheet unpacks the list everywhere it does apply.
+  const className = 'PostUser-badges badges badges--packed LrBadgeLabels-list' + (variant === 'header' ? ' LrBadgeLabels-list--header' : '');
+
+  return m('ul', { className: className }, children);
 }
 
 // ---------------------------------------------------------------- extendables
@@ -279,9 +341,16 @@ function extendMethod(proto, method, callback) {
 }
 
 window.app.initializers.add(EXT_ID, () => {
-  const m = window.m;
-
   applyRootClasses();
+
+  // An open title closes when the reader taps or clicks anywhere that isn't a
+  // badge. The badges stop their own events, so anything arriving here is
+  // somewhere else on the page.
+  if (settings().titles === 'expand') {
+    document.addEventListener('click', () => {
+      if (openBadge !== null && setOpenBadge(null)) window.m.redraw();
+    });
+  }
 
   onCoreModule('forum/components/PostUser', (PostUser) => {
     if (!PostUser || !PostUser.prototype) return;
@@ -291,29 +360,63 @@ window.app.initializers.add(EXT_ID, () => {
     if (PostUser.prototype._lrBadgeLabelsPatched) return;
     PostUser.prototype._lrBadgeLabelsPatched = true;
 
-    extendMethod(PostUser.prototype, 'userViewItems', function (items, user) {
+    extendMethod(PostUser.prototype, 'userViewItems', function (items, user, post) {
       const s = settings();
 
       if (!items || typeof items.has !== 'function' || !items.has('postUser-badges')) return;
       if (!user || typeof user.badges !== 'function') return;
 
       try {
-        const children = badgeItems(user, s.labels);
-
-        if (s.postCount) {
-          const count = postCountItem(user);
-          if (count) children.push(count);
+        // The beside layout renders the list from the post header instead, so
+        // that the timestamp stays next to the username rather than being
+        // pushed below the badges.
+        if (s.layout === 'beside') {
+          items.remove('postUser-badges');
+          return;
         }
 
-        // badges--packed (the overlapping-icon strip) is kept so phones still
-        // get Flarum's compact header when the admin hasn't opted into labels
-        // there; the stylesheet unpacks the list everywhere it does apply.
-        const className = 'PostUser-badges badges badges--packed LrBadgeLabels-list';
+        const list = badgeList(user, post, 'column');
 
-        items.setContent('postUser-badges', m('ul', { className: className }, children));
+        if (list) items.setContent('postUser-badges', list);
       } catch (e) {
         // Leave core's own badge list in place rather than blanking the author
         // area if a badge from another extension surprises us.
+        console.error('[' + EXT_ID + ']', e);
+      }
+    });
+  });
+
+  onCoreModule('forum/components/CommentPost', (CommentPost) => {
+    if (!CommentPost || !CommentPost.prototype) return;
+    if (CommentPost.prototype._lrBadgeLabelsPatched) return;
+    CommentPost.prototype._lrBadgeLabelsPatched = true;
+
+    // A post only re-renders when something it watches changes (both majors
+    // retain the subtree otherwise), so opening a title has to be one of the
+    // things it watches, or the tap would redraw nothing.
+    extendMethod(CommentPost.prototype, 'oninit', function () {
+      if (settings().titles !== 'expand') return;
+      if (this.subtree && typeof this.subtree.check === 'function') {
+        this.subtree.check(() => openBadge);
+      }
+    });
+
+    extendMethod(CommentPost.prototype, 'headerItems', function (items) {
+      const s = settings();
+      if (s.layout !== 'beside') return;
+      if (!items || typeof items.add !== 'function') return;
+
+      try {
+        const post = this.attrs && this.attrs.post;
+        const user = post && typeof post.user === 'function' ? post.user() : null;
+        if (!user || typeof user.badges !== 'function') return;
+
+        const list = badgeList(user, post, 'header');
+
+        // Added last, so it follows the timestamp (and anything else another
+        // extension puts on the header line) instead of interrupting it.
+        if (list) items.add('linkrobinsBadgeLabels', list, -10);
+      } catch (e) {
         console.error('[' + EXT_ID + ']', e);
       }
     });
