@@ -215,11 +215,19 @@ function badgeItems(user, withLabels) {
     });
 }
 
+// A user who has never been counted (or a serializer that withholds it) has no
+// post count to draw, which is different from having written no posts.
+function postCountFor(user) {
+  const count = user && typeof user.commentCount === 'function' ? user.commentCount() : null;
+
+  return typeof count === 'number' && !isNaN(count) ? count : null;
+}
+
 function postCountItem(user) {
   const m = window.m;
-  const count = typeof user.commentCount === 'function' ? user.commentCount() : null;
+  const count = postCountFor(user);
 
-  if (typeof count !== 'number' || isNaN(count)) return null;
+  if (count === null) return null;
 
   // Built from the same two halves as a labelled badge, so it reads as one of
   // them instead of as another piece of post metadata sitting next to the
@@ -240,6 +248,26 @@ function postCountItem(user) {
       ),
     ]
   );
+}
+
+// How many rows the below-avatar stack comes to. The stylesheet takes the list
+// out of flow there, so this is what tells it how much room to keep for it, and
+// it has to agree with badgeList() below: every badge is a row of its own in that
+// placement, labelled or not, and the post count is one more.
+function stackCount(user) {
+  if (!user || typeof user.badges !== 'function') return 0;
+
+  try {
+    const list = user.badges();
+    const badges = list && typeof list.toArray === 'function' ? list.toArray() : [];
+    let count = badges.filter((badge) => badge).length;
+
+    if (settings().postCount && postCountFor(user) !== null) count++;
+
+    return count;
+  } catch (e) {
+    return 0;
+  }
 }
 
 // The whole list: every badge, then the post count. `variant` says where it is
@@ -343,9 +371,49 @@ window.app.initializers.add(EXT_ID, () => {
     if (CommentPost.prototype._lrBadgeLabelsPatched) return;
     CommentPost.prototype._lrBadgeLabelsPatched = true;
 
+    // Below the avatar, the stylesheet lifts the badge list out of the document
+    // flow (a float that tall dragged the post's height with it and knocked the
+    // body out of line with the avatar). Out of flow, nothing reserves room for
+    // the stack any more, and CSS cannot count badges to work out how much room
+    // that is, so the count is published on the post element for it to read.
+    extendMethod(CommentPost.prototype, 'elementAttrs', function (attrs) {
+      const s = settings();
+      if (s.layout !== 'below') return;
+      if (!attrs || typeof attrs !== 'object') return;
+
+      try {
+        const post = this.attrs && this.attrs.post;
+        const user = post && typeof post.user === 'function' ? post.user() : null;
+        const count = stackCount(user);
+
+        if (!count) return;
+
+        // Another extension may already have styled the post element, as either
+        // a string or an object, so add to whichever of the two it left behind.
+        if (typeof attrs.style === 'string') {
+          attrs.style = attrs.style.replace(/;\s*$/, '') + '; --lrbl-stack-count: ' + count;
+        } else if (attrs.style && typeof attrs.style === 'object') {
+          attrs.style['--lrbl-stack-count'] = String(count);
+        } else {
+          attrs.style = '--lrbl-stack-count: ' + count;
+        }
+      } catch (e) {
+        console.error('[' + EXT_ID + ']', e);
+      }
+    });
+
+    // The beside placement renders the list here always. The below placement
+    // renders a second copy here as well, but only when the admin has asked for
+    // labels on phones, because that is the one case where the author column does
+    // not exist: core collapses it, so a list left in there sits between the
+    // username and the timestamp and pushes the timestamp onto a line of its own.
+    // In the header it lands after the timestamp instead, the way it does on a
+    // desktop, and the stylesheet shows whichever copy belongs to the width. The
+    // copy is not rendered at all unless it can be needed, so the default
+    // settings produce exactly the markup they did before.
     extendMethod(CommentPost.prototype, 'headerItems', function (items) {
       const s = settings();
-      if (s.layout !== 'beside') return;
+      if (s.layout !== 'beside' && !(s.layout === 'below' && s.phone)) return;
       if (!items || typeof items.add !== 'function') return;
 
       try {

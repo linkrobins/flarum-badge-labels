@@ -27,10 +27,13 @@
 
 @lrbl-column-width: var(--lrbl-column-width, 150px);
 
-// Core gives .Badge a --size of 22px on both majors. The title matches that
-// height so the two halves of a pill line up.
-@lrbl-pill-height: 22px;
-@lrbl-pill-radius: @lrbl-pill-height / 2;
+// Core gives .Badge a --size of 22px on both majors, and shrinks it to 20px in
+// its compact phone header. The title has to match whichever is in force, and it
+// cannot read core's --size: that is set on the badge itself, and the title is
+// its sibling, not its child. So both halves take their height from one custom
+// property of ours instead, and the phone block below re-points it.
+@lrbl-pill-height: ~"var(--lrbl-pill-height, 22px)";
+@lrbl-pill-radius: ~"calc(var(--lrbl-pill-height, 22px) / 2)";
 
 // The title beside a badge. It takes the badge's own colour, so it has to carry
 // its own readable text colour (picked from the badge's luminance by the forum
@@ -144,7 +147,61 @@
       width: auto;
       // Longer names ellipsis rather than run under the post body.
       max-width: ~"calc(@{lrbl-column-width} - 15px)";
-      margin-top: var(--lrbl-avatar-offset, 70px);
+
+      // Core FLOATS this list into the author column, and a float's height lands
+      // on whatever contains it: the .Post-main grid item in 2.x, the post
+      // itself in 1.x. One badge per row is far taller than the header the float
+      // was sized for, so the post grew a block of empty space and stopped
+      // lining up with its avatar. Out of flow it no longer contributes any
+      // height (which also computes core's float away, per spec).
+      //
+      // left stays auto on purpose: the list keeps its static horizontal position
+      // and the negative margin core gives it, which is what puts it in the
+      // author column to begin with. .PostUser is position: relative on both
+      // majors, so that is the containing block.
+      //
+      // The offset is a real `top` rather than a margin, though. Left at its
+      // static position the list would hang off the END of the header's line
+      // box, which folds the theme's header line-height into the offset and into
+      // the room reserved below. .PostUser starts at the post's content top, the
+      // same place the avatar starts, so measuring from there puts the stack a
+      // predictable distance under the avatar whatever the header is doing.
+      position: absolute;
+      top: var(--lrbl-avatar-offset, 70px);
+      margin-top: 0;
+    }
+
+    // Out of flow, the post no longer reserves room for the stack, so a badge
+    // stack taller than a one-line post would hang past its bottom edge into the
+    // next post. How tall the stack is depends on how many badges there are,
+    // which CSS cannot count, so the forum bundle publishes the row count on the
+    // post element and the floor is worked out from it here: the post's own top
+    // padding, the offset the stack is anchored at, a row per badge, and 10px so
+    // the last pill is not flush with the post's bottom edge. A row is a pill
+    // plus the list's 4px row-gap, which over-reserves by one gap. Slack in a
+    // floor is harmless; being short is the bug.
+    //
+    // 104px is core's own baseline in this same breakpoint (64px avatar + 40px
+    // padding), which a post with no badges at all must not drop below.
+    //
+    // The selector is every post that actually draws its badges. Core hides them
+    // on a hidden post until it is revealed (.Post--hidden:not(.revealContent)
+    // takes the whole author column down with it), and reserving room for a stack
+    // nobody can see would stop those posts collapsing. Revealed, the badges are
+    // back and so is the need for the room, which is why this cannot just reuse
+    // core's flat :not(.Post--hidden).
+    .CommentPost:not(.Post--hidden:not(.revealContent)) {
+      min-height: ~"max(104px, calc(var(--post-padding, 20px) + var(--lrbl-avatar-offset, 70px) + var(--lrbl-stack-count, 0) * (var(--lrbl-pill-height, 22px) + 4px) + 10px))";
+    }
+
+    // With labels turned on for phones, this placement renders a second copy of
+    // the list in the post header for the phone breakpoint to use. There is an
+    // author column at this width, so the column copy is the one that shows and
+    // the header copy is not needed. Both list classes are in the selector because
+    // the header rule near the top of this file carries all three of them, and a
+    // shorter selector than that one loses to it.
+    .PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--header {
+      display: none;
     }
   }
 
@@ -195,9 +252,33 @@
     .PostUser-badges.LrBadgeLabels-list {
       .lrbl-list();
 
+      // Core shrinks author badges to 20px here (.Badge--size(20px) on both
+      // majors) to keep its compact header, so the title has to come down with
+      // it or the two halves of the pill are different heights and the icon
+      // reads as sitting off-centre. Matching core is the fix; pushing --size
+      // back up to 22px would just undo core's phone layout.
+      --lrbl-pill-height: 20px;
+
       position: static;
       width: auto;
       margin: 6px 0 0;
+    }
+
+    // In the below placement, use the header copy of the list at this width and
+    // drop the author-column one. Core collapses the author column on phones, so
+    // a list left in it renders between the username and the timestamp and pushes
+    // the timestamp onto its own line; from the header it follows the timestamp
+    // instead, as it does at every other width. The list is block-level here
+    // (display: flex, from the mixin above) so it still takes a line of its own
+    // below them rather than trailing off the end of the header.
+    //
+    // Both root classes are chained onto one selector rather than nested: they
+    // are both on <html>, and this has to outrank the rule above that lays every
+    // copy out.
+    &.lrBadgeLabels--below {
+      .PostUser-badges.LrBadgeLabels-list:not(.LrBadgeLabels-list--header) {
+        display: none;
+      }
     }
   }
 }
