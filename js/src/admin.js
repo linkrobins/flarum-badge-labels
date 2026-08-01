@@ -30,8 +30,13 @@ function settings() {
       setting: PREFIX + 'labels',
       label: trans('labels_label'),
       help: trans('labels_help'),
-      type: 'boolean',
-      default: true,
+      type: 'select',
+      options: {
+        all: trans('labels_all'),
+        first: trans('labels_first'),
+        none: trans('labels_none'),
+      },
+      default: 'all',
     },
     {
       setting: PREFIX + 'post_count',
@@ -41,6 +46,25 @@ function settings() {
       default: true,
     },
     {
+      setting: PREFIX + 'post_count_placement',
+      label: trans('post_count_placement_label'),
+      help: trans('post_count_placement_help'),
+      type: 'select',
+      options: {
+        badges: trans('post_count_placement_badges'),
+        below: trans('post_count_placement_below'),
+        beside: trans('post_count_placement_beside'),
+      },
+      default: 'badges',
+    },
+    {
+      setting: PREFIX + 'discussion_badges',
+      label: trans('discussion_badges_label'),
+      help: trans('discussion_badges_help'),
+      type: 'boolean',
+      default: false,
+    },
+    {
       setting: PREFIX + 'column_width',
       label: trans('column_width_label'),
       help: trans('column_width_help'),
@@ -48,6 +72,15 @@ function settings() {
       min: 85,
       max: 400,
       default: 150,
+    },
+    {
+      setting: PREFIX + 'avatar_gap',
+      label: trans('avatar_gap_label'),
+      help: trans('avatar_gap_help'),
+      type: 'number',
+      min: 0,
+      max: 60,
+      default: 4,
     },
     {
       setting: PREFIX + 'phone',

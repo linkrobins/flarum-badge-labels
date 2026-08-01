@@ -1,6 +1,6 @@
 {
     "name": "linkrobins/badge-labels",
-    "description": "Show each badge's full title beside its icon, move the badges below or beside the avatar, and show the author's post count.",
+    "description": "Show each badge's full title beside its icon, move the badges below or beside the avatar, show the author's post count, and label a discussion's badges too.",
     "type": "flarum-extension",
     "license": "MIT",
     "keywords": [

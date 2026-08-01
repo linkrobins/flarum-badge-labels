@@ -21,15 +21,24 @@ return [
         ->default(Settings::LAYOUT, Settings::DEFAULT_LAYOUT)
         ->serializeToForum('linkrobinsBadgeLabelsLayout', Settings::LAYOUT, fn ($value) => Settings::layout($value))
 
-        ->default(Settings::LABELS, '1')
-        ->serializeToForum('linkrobinsBadgeLabelsLabels', Settings::LABELS, fn ($value) => Settings::bool($value))
+        ->default(Settings::LABELS, Settings::DEFAULT_LABELS)
+        ->serializeToForum('linkrobinsBadgeLabelsLabels', Settings::LABELS, fn ($value) => Settings::labels($value))
 
         ->default(Settings::POST_COUNT, '1')
         ->serializeToForum('linkrobinsBadgeLabelsPostCount', Settings::POST_COUNT, fn ($value) => Settings::bool($value))
+
+        ->default(Settings::POST_COUNT_PLACEMENT, Settings::DEFAULT_POST_COUNT_PLACEMENT)
+        ->serializeToForum('linkrobinsBadgeLabelsPostCountPlacement', Settings::POST_COUNT_PLACEMENT, fn ($value) => Settings::postCountPlacement($value))
+
+        ->default(Settings::DISCUSSION_BADGES, '0')
+        ->serializeToForum('linkrobinsBadgeLabelsDiscussionBadges', Settings::DISCUSSION_BADGES, fn ($value) => Settings::bool($value))
 
         ->default(Settings::PHONE, '0')
         ->serializeToForum('linkrobinsBadgeLabelsPhone', Settings::PHONE, fn ($value) => Settings::bool($value))
 
         ->default(Settings::COLUMN_WIDTH, (string) Settings::DEFAULT_COLUMN_WIDTH)
-        ->serializeToForum('linkrobinsBadgeLabelsColumnWidth', Settings::COLUMN_WIDTH, fn ($value) => Settings::columnWidth($value)),
+        ->serializeToForum('linkrobinsBadgeLabelsColumnWidth', Settings::COLUMN_WIDTH, fn ($value) => Settings::columnWidth($value))
+
+        ->default(Settings::AVATAR_GAP, (string) Settings::DEFAULT_AVATAR_GAP)
+        ->serializeToForum('linkrobinsBadgeLabelsAvatarGap', Settings::AVATAR_GAP, fn ($value) => Settings::avatarGap($value)),
 ];

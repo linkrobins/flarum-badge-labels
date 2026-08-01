@@ -1,11 +1,15 @@
 // Link Robins Badge Labels
 //
-// Two things happen here:
+// Three things happen here:
 //   1. each badge becomes one pill, its icon at the rounded left end and its
 //      title at the rounded right end, instead of a packed strip of
-//      overlapping icons, and
-//   2. the list moves, either into a widened author column ("below") or up
-//      beside the username ("beside").
+//      overlapping icons,
+//   2. the post author's list moves, either into a widened author column
+//      ("below") or up beside the username ("beside"), with the post count
+//      free to go to either of them, and
+//   3. a discussion's own badges (sticky, locked, and whatever else a forum
+//      has added) can take the same pill shape, in the hero and on the line
+//      under a discussion row's title.
 //
 // The two majors size the author column differently: 2.x reads the CSS custom
 // property --avatar-column-width, while 1.x compiles an 85px LESS variable into
@@ -13,13 +17,15 @@
 // element keep those apart. Everything else is shared.
 //
 // The classes this file keys off are all set on <html> by the forum bundle:
-//   --labels     show badge titles
-//   --postCount  show the author's post count
-//   --below      badges under the avatar
-//   --beside     badges next to the username
-//   --wide       the author column has to make room for the above
-//   --phone      apply on phones as well
-//   --v1 / --v2  which Flarum major we are on
+//   --labels      badge titles are shown somewhere
+//   --postCount   show the author's post count
+//   --below       badges under the avatar
+//   --beside      badges next to the username
+//   --column      something (badges, the count, or both) is in the author column
+//   --wide        the author column has to make room for it
+//   --discussions label a discussion's badges too
+//   --phone       apply on phones as well
+//   --v1 / --v2   which Flarum major we are on
 //
 // Note for 1.x: its LESS compiler evaluates the arithmetic inside an unescaped
 // calc(), and dies on the CSS custom properties in there, so every calc below
@@ -35,9 +41,26 @@
 @lrbl-pill-height: ~"var(--lrbl-pill-height, 22px)";
 @lrbl-pill-radius: ~"calc(var(--lrbl-pill-height, 22px) / 2)";
 
-// The title beside a badge. It takes the badge's own colour, so it has to carry
-// its own readable text colour (picked from the badge's luminance by the forum
-// bundle) instead of inheriting the theme's.
+// The left half of a labelled pill is wider than the circle a badge draws on its
+// own, so that the icon is not left hugging the rounded cap with all the room on
+// the side the title is. It is a fixed width rather than the icon's own, so that
+// every title in a stack starts at the same place whatever its icon.
+@lrbl-icon-width: ~"calc(var(--lrbl-pill-height, 22px) + var(--lrbl-icon-pad, 4px))";
+
+// One row of a stack, for working out how much room to keep for it.
+@lrbl-row-gap: ~"var(--lrbl-row-gap, 6px)";
+@lrbl-row-height: ~"calc(var(--lrbl-pill-height, 22px) + var(--lrbl-row-gap, 6px))";
+
+// How far under the top of the author column the badges below the avatar start.
+// The bundle sets this from the avatar's height plus the gap the admin asked
+// for; the fallback is that same sum with the default gap.
+@lrbl-avatar-offset: ~"var(--lrbl-avatar-offset, 68px)";
+
+// The title beside a badge. It draws no background of its own: the badge does
+// that for the whole pill (see below), so the two ends cannot end up different
+// colours. Its own colour is the one the badge would give its icon, which for a
+// badge that brings a colour of its own is picked from that colour's luminance
+// by the forum bundle.
 .LrBadgeLabels-label {
   display: inline-block;
   min-width: 0;
@@ -45,12 +68,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 0 10px 0 6px;
-  border-radius: @lrbl-pill-radius;
+  // The gap to the icon is the room inside the badge's end of the pill, so
+  // there is only a hair of padding here; the rounded end on the right needs
+  // rather more.
+  padding-block: 0;
+  padding-inline: 1px 10px;
   font-size: ~"calc(12px * var(--lr-ui-scale, 1))";
   font-weight: 600;
   line-height: @lrbl-pill-height;
-  background: var(--lrbl-accent, var(--badge-bg));
   color: var(--badge-color);
 }
 
@@ -69,39 +94,29 @@
   font-weight: normal;
 }
 
-// The beside layout renders the list from the post header, where none of core's
-// author-column rules apply and there is no column to sit in at any width. All
-// three classes are needed to outrank the list rules further down, which would
-// otherwise make this block-level and push it onto its own line.
-.PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--header {
-  position: static;
-  float: none;
-  display: inline-flex;
-  vertical-align: middle;
-  width: auto;
-  max-width: none;
-  margin: 0;
-}
+// ------------------------------------------------------------- shared shapes
 
-// The list itself, shared between tablet-and-up and the phone opt-in. Core
-// packs the badges into a right-aligned, nowrap strip 64px wide with each badge
-// pulled over its neighbour, and none of that survives a title.
-.lrbl-list() {
+// A wrapping row (or column) of pills, in place of core's right-aligned nowrap
+// strip with each badge pulled over its neighbour.
+.lrbl-flow() {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 6px;
+  row-gap: @lrbl-row-gap;
+  column-gap: 6px;
   padding-inline-start: 0;
   text-align: left;
   white-space: normal;
   pointer-events: auto;
+}
 
+// The pills themselves. Core styles list items as `.badges > li`, which outranks
+// a lone class, so every one of these has to be reached through the list.
+.lrbl-pills() {
   .Badge {
     margin-left: 0;
     flex: 0 0 auto;
   }
 
-  // Core styles the list items as `.badges > li`, which outranks a lone class,
-  // so these have to be reached through the list.
   > .LrBadgeLabels-item {
     display: flex;
     align-items: center;
@@ -110,28 +125,105 @@
     max-width: 100%;
   }
 
-  // A labelled badge reads as a single pill: the icon is its left end and the
-  // title its right end, in one colour. Only labelled ones, since a
-  // half-rounded badge on its own would just look broken.
+  // A labelled badge reads as a single pill: the icon at one end, the title at
+  // the other, in one colour. Only labelled ones, since a stretched badge with
+  // nothing in it would just look broken.
+  //
+  // That one colour is the badge's OWN background, stretched behind the title
+  // as well, rather than a matching colour on each half. A badge does not
+  // always hand Flarum a colour to match: core's sticky and locked badges (and
+  // any other badge that takes a type rather than a colour) are painted by a
+  // class that sets --badge-bg on the badge itself, which a sibling title has
+  // no way of reading, so it fell back to the theme's plain badge colour and
+  // the pill came out in two colours. One element, one background, no match to
+  // get wrong.
   > .LrBadgeLabels-item--labelled {
     gap: 0;
+    position: relative;
+    border-radius: @lrbl-pill-radius;
+    // Only reached by a badge that renders no .Badge element of its own, and
+    // only when it named a colour; every ordinary badge covers this over.
+    background: var(--lrbl-accent, transparent);
 
     .Badge {
-      border-radius: @lrbl-pill-radius 0 0 @lrbl-pill-radius;
-      // Core rings the circle with a drop shadow, which across the join would
-      // draw a line down the middle of the pill.
+      position: absolute;
+      inset: 0;
+      width: auto;
+      height: auto;
+      border-radius: @lrbl-pill-radius;
+      // Core rings the circle with a drop shadow, which under the title would
+      // draw a line across the middle of the pill.
       box-shadow: none;
+      justify-content: flex-start;
     }
 
+    // The icon holds the width of the pill's near end, so that every title in a
+    // stack starts at the same place whatever its icon, and the room on either
+    // side of an icon is even.
+    .Badge-icon {
+      width: @lrbl-icon-width;
+      text-align: center;
+    }
+
+    // Drawn over the badge, which is what the padding leaves room for.
     .LrBadgeLabels-label {
-      border-radius: 0 @lrbl-pill-radius @lrbl-pill-radius 0;
+      position: relative;
+      padding-inline-start: ~"calc(@{lrbl-icon-width} + 1px)";
     }
   }
 }
 
+// ------------------------------------------------------------- the post lists
+
+// A list rendered in the post header rather than the author column: the beside
+// placement, and the phone copy of the column list. None of core's author-column
+// rules apply there and there is no column to sit in at any width. All three
+// classes are needed to outrank the list rules further down, which would
+// otherwise make this block-level and push it onto its own line.
+//
+// The padding is the badge group's own breathing room, top and bottom, so that
+// a row of pills on the header line is not pressed against the username above
+// it or the post below.
+.PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--header {
+  position: static;
+  float: none;
+  display: inline-flex;
+  vertical-align: middle;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding-block: var(--lrbl-group-padding, 3px);
+}
+
+// A header line that carries one of our lists keeps each of its OWN items in
+// one piece. The list is an atom: too wide for what is left of the line and it
+// moves down whole, to the header's own left edge, which is where a group of
+// badges belongs. Without this the browser takes the cheaper break instead and
+// splits the timestamp ("12 days" / "ago") to fit some of it, leaving the
+// badges to start mid-line under a stray word.
+//
+// Our own item is left out of it on purpose: nowrap there would forbid the
+// break in front of the list as well, and it would sit on the first line and
+// run off the end of the post instead of moving down.
+.lrBadgeLabels--header .Post-header > ul > li:not([class*='item-linkrobinsBadgeLabels']) {
+  white-space: nowrap;
+}
+
+// And the list gets a break opportunity of its own to move down at. There is no
+// whitespace between the header's items, so on 1.x, where the timestamp is a
+// plain link, the only places the line could break were inside its words: take
+// those away and the group had nowhere to go and ran off the end of the post
+// instead. (2.x renders the same timestamp as a button, which is an atomic box
+// the line can break after, so it never needed this.) A zero-width space is a
+// break opportunity that costs no room when the group does fit on the line.
+.lrBadgeLabels--header .Post-header > ul > li[class*='item-linkrobinsBadgeLabels']::before {
+  content: '\200B';
+}
+
 @media @tablet-up {
   .PostUser-badges.LrBadgeLabels-list {
-    .lrbl-list();
+    .lrbl-flow();
+    .lrbl-pills();
   }
 
   // Badges below the avatar: one row per badge, in the author column.
@@ -140,8 +232,11 @@
   // header, which is what gives the badge icons their overlapping-the-avatar
   // look. Titles have nowhere to go there, so the list is pushed down past the
   // avatar first.
-  .lrBadgeLabels--below {
-    .PostUser-badges.LrBadgeLabels-list {
+  .lrBadgeLabels--column {
+    // The author column's own list only. A copy of it in the post header (the
+    // beside placement, or the phone copy) is laid out by the header rule
+    // above, and must not be taken out of the flow and stood on end down here.
+    .PostUser-badges.LrBadgeLabels-list:not(.LrBadgeLabels-list--header) {
       flex-direction: column;
       align-items: flex-start;
       width: auto;
@@ -167,7 +262,7 @@
       // same place the avatar starts, so measuring from there puts the stack a
       // predictable distance under the avatar whatever the header is doing.
       position: absolute;
-      top: var(--lrbl-avatar-offset, 70px);
+      top: @lrbl-avatar-offset;
       margin-top: 0;
     }
 
@@ -178,8 +273,8 @@
     // post element and the floor is worked out from it here: the post's own top
     // padding, the offset the stack is anchored at, a row per badge, and 10px so
     // the last pill is not flush with the post's bottom edge. A row is a pill
-    // plus the list's 4px row-gap, which over-reserves by one gap. Slack in a
-    // floor is harmless; being short is the bug.
+    // plus the list's row gap, which over-reserves by one gap. Slack in a floor
+    // is harmless; being short is the bug.
     //
     // 104px is core's own baseline in this same breakpoint (64px avatar + 40px
     // padding), which a post with no badges at all must not drop below.
@@ -191,18 +286,16 @@
     // back and so is the need for the room, which is why this cannot just reuse
     // core's flat :not(.Post--hidden).
     .CommentPost:not(.Post--hidden:not(.revealContent)) {
-      min-height: ~"max(104px, calc(var(--post-padding, 20px) + var(--lrbl-avatar-offset, 70px) + var(--lrbl-stack-count, 0) * (var(--lrbl-pill-height, 22px) + 4px) + 10px))";
+      min-height: ~"max(104px, calc(var(--post-padding, 20px) + @{lrbl-avatar-offset} + var(--lrbl-stack-count, 0) * @{lrbl-row-height} + 10px))";
     }
+  }
 
-    // With labels turned on for phones, this placement renders a second copy of
-    // the list in the post header for the phone breakpoint to use. There is an
-    // author column at this width, so the column copy is the one that shows and
-    // the header copy is not needed. Both list classes are in the selector because
-    // the header rule near the top of this file carries all three of them, and a
-    // shorter selector than that one loses to it.
-    .PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--header {
-      display: none;
-    }
+  // The phone copy of the author column's list is only ever for the phone
+  // breakpoint; at this width the column itself is showing. This comes after the
+  // header rule above on purpose: the two selectors weigh the same, so the later
+  // one is the one that wins for the copy that carries both classes.
+  .PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--phone {
+    display: none;
   }
 
   // 2.x sizes the author column from a custom property, so widening it is one
@@ -221,7 +314,10 @@
       left: ~"calc(0px - @{lrbl-column-width})";
     }
 
-    .PostUser-badges {
+    // Core's own pull into the author column, redone for the wider one. A copy
+    // of the list in the post header is not in that column and must keep the
+    // margin the header rule gives it, or it lands on top of the username.
+    .PostUser-badges:not(.LrBadgeLabels-list--header) {
       margin-left: ~"calc(5px - @{lrbl-column-width})";
     }
 
@@ -240,17 +336,21 @@
   // Phones have no author column: Flarum tucks the badges over the avatar in a
   // 32px strip, where titles and a post count have nowhere to go. They stay in
   // the markup (one bundle, no width-dependent rendering) but stay hidden
-  // unless the admin asks for them.
+  // unless the admin asks for them. Only in a post, though: a discussion's
+  // badges are laid out on a line with room for them at every width.
   html:not(.lrBadgeLabels--phone) {
-    .LrBadgeLabels-label,
-    .LrBadgeLabels-countItem {
-      display: none;
+    .PostUser-badges.LrBadgeLabels-list {
+      .LrBadgeLabels-label,
+      .LrBadgeLabels-countItem {
+        display: none;
+      }
     }
   }
 
   .lrBadgeLabels--phone {
     .PostUser-badges.LrBadgeLabels-list {
-      .lrbl-list();
+      .lrbl-flow();
+      .lrbl-pills();
 
       // Core shrinks author badges to 20px here (.Badge--size(20px) on both
       // majors) to keep its compact header, so the title has to come down with
@@ -264,21 +364,72 @@
       margin: 6px 0 0;
     }
 
-    // In the below placement, use the header copy of the list at this width and
-    // drop the author-column one. Core collapses the author column on phones, so
-    // a list left in it renders between the username and the timestamp and pushes
-    // the timestamp onto its own line; from the header it follows the timestamp
-    // instead, as it does at every other width. The list is block-level here
-    // (display: flex, from the mixin above) so it still takes a line of its own
-    // below them rather than trailing off the end of the header.
+    // Use the header copy of the author column's list at this width and drop the
+    // column one. Core collapses the author column on phones, so a list left in
+    // it renders between the username and the timestamp and pushes the timestamp
+    // onto its own line; from the header it follows the timestamp instead, as it
+    // does at every other width. The list is block-level here (display: flex,
+    // from the mixin above) so it still takes a line of its own below them
+    // rather than trailing off the end of the header.
     //
     // Both root classes are chained onto one selector rather than nested: they
     // are both on <html>, and this has to outrank the rule above that lays every
     // copy out.
-    &.lrBadgeLabels--below {
+    &.lrBadgeLabels--column {
       .PostUser-badges.LrBadgeLabels-list:not(.LrBadgeLabels-list--header) {
         display: none;
       }
+    }
+  }
+}
+
+// ------------------------------------------------------- the discussion lists
+
+// A discussion's badges, when the admin has asked for those to be labelled too.
+// Both of these are opt-in, so nothing here applies to a forum that has not
+// turned them on.
+.lrBadgeLabels--discussions {
+  // In the hero the badges sit inline before the title, which is where core puts
+  // them and where there is a page width to spread into.
+  .LrBadgeLabels-list--hero {
+    .lrbl-flow();
+    .lrbl-pills();
+
+    display: inline-flex;
+    vertical-align: middle;
+    // Core's own .DiscussionHero .badges spacing, minus the vertical nudge it
+    // gives a strip of bare icons.
+    margin: 0 10px 0 0;
+  }
+
+  // In a discussion row the pills go on the line under the title. Core's strip
+  // over the avatar is 48px wide, absolutely positioned and nowrap, so this is
+  // a list of its own down here rather than that one restyled.
+  .LrBadgeLabels-list--row {
+    .lrbl-flow();
+    .lrbl-pills();
+
+    display: inline-flex;
+    vertical-align: middle;
+    // The info line is 11px text; without this the pills would set the line
+    // height for it and space the rows out.
+    margin: -2px 6px -2px 0;
+
+    // Titles here are short (a sticky or a lock), and the row is not the place
+    // for a name long enough to need a line of its own.
+    > .LrBadgeLabels-item {
+      max-width: 220px;
+    }
+  }
+
+  // On a phone the pills take a line of their own above the rest of the row.
+  // Sharing it costs more than it saves: 1.x keeps that line to one line and
+  // ellipsises the overflow, so the pills would push who replied and when off
+  // the end of it. A block-level list splits the line and takes the top half.
+  @media @phone {
+    .LrBadgeLabels-list--row {
+      display: flex;
+      margin: 0 0 2px;
     }
   }
 }
