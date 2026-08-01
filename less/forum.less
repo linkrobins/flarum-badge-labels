@@ -266,6 +266,43 @@
       margin-top: 0;
     }
 
+    // Centered, and the grid built on it. Both are opt-in: a forum that has not
+    // picked an arrangement keeps the left-aligned rows above untouched.
+    //
+    // Centering needs the list to span the column, which the rows arrangement
+    // deliberately does not do (it shrinks to its widest pill so a long badge
+    // name can ellipsis against the post body rather than be centered against
+    // it). So the width becomes the column's, and align-items does the rest.
+    // The list is already anchored at the column's left edge by core's negative
+    // margin, so a width is all it takes to fill it.
+    // Chained, not nested: both classes are on <html>, so this is one element
+    // wearing two of them rather than one inside the other.
+    &.lrBadgeLabels--centered {
+      .PostUser-badges.LrBadgeLabels-list:not(.LrBadgeLabels-list--header) {
+        align-items: center;
+        width: ~"calc(@{lrbl-column-width} - 15px)";
+        max-width: ~"calc(@{lrbl-column-width} - 15px)";
+        text-align: center;
+      }
+    }
+
+    // The grid: untitled badges share rows instead of taking one each, which is
+    // what makes an icons-only column read as a block under the avatar rather
+    // than as a tall thin line of circles.
+    //
+    // Titled pills are left to wrap on their own. A pill is close to the width
+    // of the column, so it takes a line to itself anyway, and FORCING one with
+    // flex-basis: 100% stretches it: the badge is drawn inset: 0 over the whole
+    // item, so a full-width item is a full-width capsule with its title adrift
+    // at one end instead of the pill hugging its own text.
+    &.lrBadgeLabels--grid {
+      .PostUser-badges.LrBadgeLabels-list:not(.LrBadgeLabels-list--header) {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
     // Out of flow, the post no longer reserves room for the stack, so a badge
     // stack taller than a one-line post would hang past its bottom edge into the
     // next post. How tall the stack is depends on how many badges there are,

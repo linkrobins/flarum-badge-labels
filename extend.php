@@ -21,6 +21,9 @@ return [
         ->default(Settings::LAYOUT, Settings::DEFAULT_LAYOUT)
         ->serializeToForum('linkrobinsBadgeLabelsLayout', Settings::LAYOUT, fn ($value) => Settings::layout($value))
 
+        ->default(Settings::ARRANGEMENT, Settings::DEFAULT_ARRANGEMENT)
+        ->serializeToForum('linkrobinsBadgeLabelsArrangement', Settings::ARRANGEMENT, fn ($value) => Settings::arrangement($value))
+
         ->default(Settings::LABELS, Settings::DEFAULT_LABELS)
         ->serializeToForum('linkrobinsBadgeLabelsLabels', Settings::LABELS, fn ($value) => Settings::labels($value))
 

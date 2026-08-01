@@ -17,6 +17,7 @@ final class Settings
     public const PREFIX = 'linkrobins-badge-labels.';
 
     public const LAYOUT = self::PREFIX.'layout';
+    public const ARRANGEMENT = self::PREFIX.'arrangement';
     public const LABELS = self::PREFIX.'labels';
     public const POST_COUNT = self::PREFIX.'post_count';
     public const POST_COUNT_PLACEMENT = self::PREFIX.'post_count_placement';
@@ -37,6 +38,23 @@ final class Settings
     public const LAYOUTS = ['below', 'beside'];
 
     public const DEFAULT_LAYOUT = 'below';
+
+    /**
+     * How the badges under the avatar are arranged in the author column:
+     *
+     *   rows      one per row, starting at the column's left edge
+     *   centered  the same rows, centered under the avatar
+     *   grid      centered, with the untitled ones sharing rows
+     *
+     * Only the column has an arrangement. Badges on the post header line
+     * follow that line and have nowhere else to go.
+     *
+     * The default is the arrangement every forum already has, so upgrading
+     * changes nothing until an admin picks one of the others.
+     */
+    public const ARRANGEMENTS = ['rows', 'centered', 'grid'];
+
+    public const DEFAULT_ARRANGEMENT = 'rows';
 
     public const DEFAULT_COLUMN_WIDTH = 150;
 
@@ -82,6 +100,16 @@ final class Settings
         $layout = is_string($value) ? strtolower(trim($value)) : '';
 
         return in_array($layout, self::LAYOUTS, true) ? $layout : self::DEFAULT_LAYOUT;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public static function arrangement($value): string
+    {
+        $arrangement = is_string($value) ? strtolower(trim($value)) : '';
+
+        return in_array($arrangement, self::ARRANGEMENTS, true) ? $arrangement : self::DEFAULT_ARRANGEMENT;
     }
 
     /**
