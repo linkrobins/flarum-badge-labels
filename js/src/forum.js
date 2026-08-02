@@ -119,14 +119,6 @@ function headerHasContent(s) {
   return s.layout === 'beside' || (s.postCount && s.countLayout === 'beside') || (s.phone && columnHasContent(s));
 }
 
-function isTwoPointX() {
-  try {
-    return !!(window.flarum && window.flarum.reg);
-  } catch (e) {
-    return false;
-  }
-}
-
 // Everything the stylesheet keys off lives on the root element, so the CSS
 // never has to care which settings produced a given post.
 function applyRootClasses() {
@@ -154,9 +146,9 @@ function applyRootClasses() {
   if (columnHasContent(s)) classes.push('lrBadgeLabels--column', 'lrBadgeLabels--wide');
   if (headerHasContent(s)) classes.push('lrBadgeLabels--header');
 
-  // 1.x compiles the author column width in as a LESS variable; 2.x exposes it
-  // as a custom property. The two need different overrides.
-  classes.push(isTwoPointX() ? 'lrBadgeLabels--v2' : 'lrBadgeLabels--v1');
+  // 1.x compiles the author column width in as a LESS variable, so every rule
+  // that used it is redone by hand in the stylesheet behind this class.
+  classes.push('lrBadgeLabels--v1');
 
   classes.forEach((name) => root.classList.add(name));
   root.style.setProperty('--lrbl-column-width', s.columnWidth + 'px');
@@ -434,19 +426,10 @@ function discussionBadgeList(discussion, variant) {
 
 // ---------------------------------------------------------------- extendables
 
-// Resolve a core component on either major: 2.x exposes lazy-chunk modules
-// through flarum.reg.onLoad (which fires when the chunk loads, or immediately
-// if it is already in); 1.x ships everything eagerly in flarum.core.compat.
+// Resolve a core component. 1.x ships everything eagerly in flarum.core.compat,
+// so the module is already there by the time an initializer runs.
 function onCoreModule(path, callback) {
   const unwrap = (mod) => (mod && mod.default ? mod.default : mod);
-
-  try {
-    const reg = window.flarum && window.flarum.reg;
-    if (reg && typeof reg.onLoad === 'function') {
-      reg.onLoad('core', path, (mod) => callback(unwrap(mod)));
-      return;
-    }
-  } catch (e) {}
 
   try {
     const compat = window.flarum && window.flarum.core && window.flarum.core.compat;

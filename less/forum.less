@@ -11,10 +11,9 @@
 //      has added) can take the same pill shape, in the hero and on the line
 //      under a discussion row's title.
 //
-// The two majors size the author column differently: 2.x reads the CSS custom
-// property --avatar-column-width, while 1.x compiles an 85px LESS variable into
-// each rule that needs it. The .lrBadgeLabels--v1 / --v2 classes on the root
-// element keep those apart. Everything else is shared.
+// Flarum 1.x compiles its 85px author column width in as a LESS variable rather
+// than exposing a custom property, so every rule that used it is redone by hand
+// behind the .lrBadgeLabels--v1 class the forum bundle sets.
 //
 // The classes this file keys off are all set on <html> by the forum bundle:
 //   --labels      badge titles are shown somewhere
@@ -25,7 +24,7 @@
 //   --wide        the author column has to make room for it
 //   --discussions label a discussion's badges too
 //   --phone       apply on phones as well
-//   --v1 / --v2   which Flarum major we are on
+//   --v1          the Flarum 1.x author column, redone by hand
 //
 // Note for 1.x: its LESS compiler evaluates the arithmetic inside an unescaped
 // calc(), and dies on the CSS custom properties in there, so every calc below
@@ -304,21 +303,13 @@
       // it makes the setting's own description true: this is the arrangement
       // that is centered UNDER THE AVATAR, so the avatar has to be on that axis.
       //
-      // Both majors center on the stack's box rather than the column's, hence
-      // the inset and the trim rather than a plain centering of the column.
-
-      // 2.x leaves the avatar an inline box alone in a block-level column, so
-      // giving that column the stack's own edges centers it with a line box.
-      &.lrBadgeLabels--v2 .Post-side {
-        padding-left: @lrbl-stack-inset;
-        padding-right: @lrbl-stack-trim - @lrbl-stack-inset;
-        text-align: center;
-      }
-
-      // 1.x pins the avatar into the column with `left` instead (see the --wide
-      // block below, which this outweighs on specificity), so the same axis has
-      // to be reached by arithmetic: start at the stack's left edge, then add
-      // half of whatever room the stack has spare around a 64px avatar.
+      // The axis is the stack's box rather than the column's, hence the inset
+      // and the trim rather than a plain centering of the column.
+      //
+      // 1.x pins the avatar into the column with `left` (see the --wide block
+      // below, which this outweighs on specificity), so the axis has to be
+      // reached by arithmetic: start at the stack's left edge, then add half of
+      // whatever room the stack has spare around a 64px avatar.
       &.lrBadgeLabels--v1 .PostUser-avatar {
         left: ~"calc(@{lrbl-stack-inset} - @{lrbl-column-width} + ((@{lrbl-column-width} - @{lrbl-stack-trim} - @{lrbl-avatar-size}) / 2))";
       }
@@ -371,12 +362,6 @@
   // one is the one that wins for the copy that carries both classes.
   .PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--phone {
     display: none;
-  }
-
-  // 2.x sizes the author column from a custom property, so widening it is one
-  // line and everything that reads it (the post grid, the time gaps) follows.
-  .lrBadgeLabels--v2.lrBadgeLabels--wide {
-    --avatar-column-width: var(--lrbl-column-width, 150px);
   }
 
   // 1.x has the width compiled in, so every rule that used it is redone here.
