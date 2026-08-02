@@ -43,6 +43,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('below', $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals(Settings::DEFAULT_ARRANGEMENT, $attributes['linkrobinsBadgeLabelsArrangement']);
         $this->assertEquals(Settings::DEFAULT_LABELS, $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertTrue($attributes['linkrobinsBadgeLabelsPostCount']);
         $this->assertEquals(Settings::DEFAULT_POST_COUNT_PLACEMENT, $attributes['linkrobinsBadgeLabelsPostCountPlacement']);
@@ -56,6 +57,7 @@ class SettingsPayloadTest extends TestCase
     public function saved_settings_reach_the_frontend(): void
     {
         $this->setting(Settings::LAYOUT, 'beside');
+        $this->setting(Settings::ARRANGEMENT, 'grid');
         $this->setting(Settings::LABELS, 'first');
         $this->setting(Settings::POST_COUNT, '0');
         $this->setting(Settings::POST_COUNT_PLACEMENT, 'below');
@@ -67,6 +69,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('beside', $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals('grid', $attributes['linkrobinsBadgeLabelsArrangement']);
         $this->assertEquals('first', $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertFalse($attributes['linkrobinsBadgeLabelsPostCount']);
         $this->assertEquals('below', $attributes['linkrobinsBadgeLabelsPostCountPlacement']);

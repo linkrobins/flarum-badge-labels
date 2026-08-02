@@ -126,6 +126,42 @@ class SettingsTest extends TestCase
     }
 
     #[Test]
+    public function known_arrangements_pass_through(): void
+    {
+        $this->assertEquals('rows', Settings::arrangement('rows'));
+        $this->assertEquals('centered', Settings::arrangement('centered'));
+        $this->assertEquals('grid', Settings::arrangement('grid'));
+    }
+
+    #[Test]
+    public function an_unknown_arrangement_falls_back_to_the_default(): void
+    {
+        // Like the layout, this becomes a class on the root element, so an
+        // unrecognised value has to become a known one rather than be passed on.
+        $this->assertEquals('rows', Settings::arrangement('stacked'));
+        $this->assertEquals('rows', Settings::arrangement(''));
+        $this->assertEquals('rows', Settings::arrangement(null));
+        $this->assertEquals('rows', Settings::arrangement(42));
+        $this->assertEquals('rows', Settings::arrangement(['grid']));
+    }
+
+    #[Test]
+    public function arrangements_are_read_case_insensitively_and_trimmed(): void
+    {
+        $this->assertEquals('grid', Settings::arrangement('  GRID '));
+        $this->assertEquals('centered', Settings::arrangement('Centered'));
+    }
+
+    #[Test]
+    public function an_upgraded_forum_with_no_arrangement_keeps_the_old_look(): void
+    {
+        // Every forum on v1.1.0 and earlier has nothing stored for this, and
+        // must go on looking exactly as it did.
+        $this->assertEquals(Settings::DEFAULT_ARRANGEMENT, Settings::arrangement(null));
+        $this->assertEquals('rows', Settings::DEFAULT_ARRANGEMENT);
+    }
+
+    #[Test]
     public function settings_stored_as_strings_read_as_booleans(): void
     {
         $this->assertTrue(Settings::bool('1'));

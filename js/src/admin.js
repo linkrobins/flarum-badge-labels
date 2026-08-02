@@ -27,6 +27,18 @@ function settings() {
       default: 'below',
     },
     {
+      setting: PREFIX + 'arrangement',
+      label: trans('arrangement_label'),
+      help: trans('arrangement_help'),
+      type: 'select',
+      options: {
+        rows: trans('arrangement_rows'),
+        centered: trans('arrangement_centered'),
+        grid: trans('arrangement_grid'),
+      },
+      default: 'rows',
+    },
+    {
       setting: PREFIX + 'labels',
       label: trans('labels_label'),
       help: trans('labels_help'),

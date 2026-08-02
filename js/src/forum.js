@@ -20,6 +20,8 @@ const ATTR = 'linkrobinsBadgeLabels';
 
 const LAYOUTS = ['below', 'beside'];
 const DEFAULT_LAYOUT = 'below';
+const ARRANGEMENTS = ['rows', 'centered', 'grid'];
+const DEFAULT_ARRANGEMENT = 'rows';
 const LABEL_MODES = ['all', 'first', 'none'];
 const DEFAULT_LABELS = 'all';
 const POST_COUNT_PLACEMENTS = ['badges', 'below', 'beside'];
@@ -29,6 +31,13 @@ const MIN_COLUMN_WIDTH = 85;
 const MAX_COLUMN_WIDTH = 400;
 // Flarum's post avatar at tablet and up, which the badges below it clear.
 const AVATAR_HEIGHT = 64;
+// A badge's own circle and the gap beside it, which is what an untitled badge
+// takes up in the grid arrangement. These mirror the pill height and column gap
+// the stylesheet uses, and are only ever used to work out how many fit on a row.
+const GRID_ITEM_WIDTH = 22;
+const GRID_ITEM_GAP = 6;
+// What the column list keeps clear of the post body, matching the stylesheet.
+const COLUMN_INSET = 15;
 const DEFAULT_AVATAR_GAP = 4;
 const MIN_AVATAR_GAP = 0;
 const MAX_AVATAR_GAP = 60;
@@ -70,6 +79,7 @@ function settings() {
   if (cached) return cached;
 
   const layout = String(forumAttribute(ATTR + 'Layout', DEFAULT_LAYOUT));
+  const arrangement = String(forumAttribute(ATTR + 'Arrangement', DEFAULT_ARRANGEMENT));
   const width = parseInt(forumAttribute(ATTR + 'ColumnWidth', DEFAULT_COLUMN_WIDTH), 10);
   const gap = parseInt(forumAttribute(ATTR + 'AvatarGap', DEFAULT_AVATAR_GAP), 10);
   const placement = String(forumAttribute(ATTR + 'PostCountPlacement', DEFAULT_POST_COUNT_PLACEMENT));
@@ -81,6 +91,7 @@ function settings() {
 
   cached = {
     layout: LAYOUTS.indexOf(layout) >= 0 ? layout : DEFAULT_LAYOUT,
+    arrangement: ARRANGEMENTS.indexOf(arrangement) >= 0 ? arrangement : DEFAULT_ARRANGEMENT,
     labels: LABEL_MODES.indexOf(labels) >= 0 ? labels : DEFAULT_LABELS,
     postCount: truthy(forumAttribute(ATTR + 'PostCount', true)),
     postCountPlacement: POST_COUNT_PLACEMENTS.indexOf(placement) >= 0 ? placement : DEFAULT_POST_COUNT_PLACEMENT,
@@ -131,6 +142,11 @@ function applyRootClasses() {
   if (s.phone) classes.push('lrBadgeLabels--phone');
 
   classes.push(s.layout === 'beside' ? 'lrBadgeLabels--beside' : 'lrBadgeLabels--below');
+
+  // The arrangement only reaches the stylesheet when it is not the one every
+  // forum already had, so the default keeps exactly the rules it had before.
+  if (s.arrangement === 'centered') classes.push('lrBadgeLabels--centered');
+  if (s.arrangement === 'grid') classes.push('lrBadgeLabels--centered', 'lrBadgeLabels--grid');
 
   // The author column has to make room for whatever is in it, which is the
   // badges, the post count, or both. When it is empty (badges and count both
@@ -320,12 +336,43 @@ function itemsFor(user, where) {
   return children;
 }
 
+function isLabelledItem(item) {
+  const className = item && item.attrs && item.attrs.className;
+
+  return typeof className === 'string' && className.indexOf('LrBadgeLabels-item--labelled') >= 0;
+}
+
+// How many untitled badges fit across the author column in the grid
+// arrangement. Never fewer than one, however narrow the column has been set.
+function gridColumns() {
+  const room = settings().columnWidth - COLUMN_INSET;
+
+  return Math.max(1, Math.floor((room + GRID_ITEM_GAP) / (GRID_ITEM_WIDTH + GRID_ITEM_GAP)));
+}
+
 // How many rows the below-avatar stack comes to. The stylesheet takes the list
-// out of flow there, so this is what tells it how much room to keep for it: in
-// that placement every item is a row of its own, badge or post count.
+// out of flow there, so this is what tells it how much room to keep for it.
+//
+// In the rows and centered arrangements every item is a row of its own, badge
+// or post count. The grid arrangement lets the untitled badges share a row, so
+// those are counted in whole rows of however many fit across the column, and a
+// titled pill is counted as a row of its own: it is nearly the width of the
+// column, so that is what it takes in practice, and a short one that does fit
+// beside an icon only means a row of slack.
+//
+// The rounding is deliberately generous. This number is a floor for the post's
+// height, and the stylesheet already over-reserves by one row gap: slack is
+// invisible, coming up short leaves the last badge hanging into the next post.
 function stackCount(user) {
   try {
-    return itemsFor(user, 'below').length;
+    const items = itemsFor(user, 'below');
+
+    if (!items.length) return 0;
+    if (settings().arrangement !== 'grid') return items.length;
+
+    const labelled = items.filter(isLabelledItem).length;
+
+    return labelled + Math.ceil((items.length - labelled) / gridColumns());
   } catch (e) {
     return 0;
   }
