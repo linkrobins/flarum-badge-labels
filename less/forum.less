@@ -56,6 +56,19 @@
 // for; the fallback is that same sum with the default gap.
 @lrbl-avatar-offset: ~"var(--lrbl-avatar-offset, 68px)";
 
+// Core's post avatar at tablet and up: the same 64px on both majors. Mirrors
+// AVATAR_HEIGHT in js/src/forum.js, which the offset above is built from.
+@lrbl-avatar-size: 64px;
+
+// The badge stack does not fill the author column. Core pulls it 5px in from the
+// column's left edge, and it is kept 15px narrower so a long name ellipsises
+// rather than running under the post body. Anything that has to line up WITH the
+// stack has to use this box and not the column: at the default width their
+// centers are 2.5px apart, which is enough to read as a misplaced avatar.
+@lrbl-stack-inset: 5px;
+@lrbl-stack-trim: 15px;
+@lrbl-stack-width: ~"calc(@{lrbl-column-width} - @{lrbl-stack-trim})";
+
 // The title beside a badge. It draws no background of its own: the badge does
 // that for the whole pill (see below), so the two ends cannot end up different
 // colours. Its own colour is the one the badge would give its icon, which for a
@@ -241,7 +254,7 @@
       align-items: flex-start;
       width: auto;
       // Longer names ellipsis rather than run under the post body.
-      max-width: ~"calc(@{lrbl-column-width} - 15px)";
+      max-width: @lrbl-stack-width;
 
       // Core FLOATS this list into the author column, and a float's height lands
       // on whatever contains it: the .Post-main grid item in 2.x, the post
@@ -280,9 +293,34 @@
     &.lrBadgeLabels--centered {
       .PostUser-badges.LrBadgeLabels-list:not(.LrBadgeLabels-list--header) {
         align-items: center;
-        width: ~"calc(@{lrbl-column-width} - 15px)";
-        max-width: ~"calc(@{lrbl-column-width} - 15px)";
+        width: @lrbl-stack-width;
+        max-width: @lrbl-stack-width;
         text-align: center;
+      }
+
+      // The avatar is centered with them. Centering the badges on their own left
+      // it parked at the column's left edge with the stack centered below it,
+      // which reads as a misplaced avatar rather than as a centered column, and
+      // it makes the setting's own description true: this is the arrangement
+      // that is centered UNDER THE AVATAR, so the avatar has to be on that axis.
+      //
+      // Both majors center on the stack's box rather than the column's, hence
+      // the inset and the trim rather than a plain centering of the column.
+
+      // 2.x leaves the avatar an inline box alone in a block-level column, so
+      // giving that column the stack's own edges centers it with a line box.
+      &.lrBadgeLabels--v2 .Post-side {
+        padding-left: @lrbl-stack-inset;
+        padding-right: @lrbl-stack-trim - @lrbl-stack-inset;
+        text-align: center;
+      }
+
+      // 1.x pins the avatar into the column with `left` instead (see the --wide
+      // block below, which this outweighs on specificity), so the same axis has
+      // to be reached by arithmetic: start at the stack's left edge, then add
+      // half of whatever room the stack has spare around a 64px avatar.
+      &.lrBadgeLabels--v1 .PostUser-avatar {
+        left: ~"calc(@{lrbl-stack-inset} - @{lrbl-column-width} + ((@{lrbl-column-width} - @{lrbl-stack-trim} - @{lrbl-avatar-size}) / 2))";
       }
     }
 
