@@ -5,11 +5,12 @@
   "scripts": {
     "dev": "webpack --mode development --watch",
     "build": "webpack --mode production",
-    "format": "prettier --write src webpack.config.js",
-    "format-check": "prettier --check src webpack.config.js"
+    "format": "prettier --write src forum.js admin.js webpack.config.js",
+    "format-check": "prettier --check src forum.js admin.js webpack.config.js"
   },
   "devDependencies": {
     "@flarum/prettier-config": "^1.0.0",
+    "flarum-webpack-config": "^3.0.4",
     "prettier": "^3.3.3",
     "webpack": "^5.90.0",
     "webpack-cli": "^5.1.4"

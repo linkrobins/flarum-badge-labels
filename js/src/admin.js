@@ -3,15 +3,12 @@
 // Every setting is a plain typed entry (boolean / select / number), which both
 // majors' auto-built settings pages render without any custom components.
 //
-// Like the forum bundle, this imports nothing from flarum/* and feature-detects
-// the globals instead, so one artifact runs on Flarum 1.8 and 2.x. The only
-// difference between the majors here is the registry object (app.registry in
-// 2.x, app.extensionData in 1.x).
+import app from 'flarum/admin/app';
 
 const EXT_ID = 'linkrobins-badge-labels';
 const PREFIX = EXT_ID + '.';
 
-const trans = (key) => window.app.translator.trans(EXT_ID + '.admin.settings.' + key);
+const trans = (key) => app.translator.trans(EXT_ID + '.admin.settings.' + key);
 
 function settings() {
   return [
@@ -104,23 +101,8 @@ function settings() {
   ];
 }
 
-window.app.initializers.add(EXT_ID, () => {
-  const app = window.app;
-
-  let registry = null;
-
-  try {
-    if (app.registry && typeof app.registry.for === 'function') {
-      registry = app.registry.for(EXT_ID); // Flarum 2.x
-    } else if (app.extensionData && typeof app.extensionData.for === 'function') {
-      registry = app.extensionData.for(EXT_ID); // Flarum 1.x
-    }
-  } catch (e) {}
-
-  if (!registry || typeof registry.registerSetting !== 'function') {
-    console.warn('[' + EXT_ID + '] no settings registry available');
-    return;
-  }
+app.initializers.add(EXT_ID, () => {
+  const registry = app.registry.for(EXT_ID);
 
   // Resolved here rather than at module load, so the labels come back in the
   // admin's own language instead of frozen to the English fallback.

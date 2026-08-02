@@ -12,9 +12,18 @@
 // that guess. A real element takes the width it needs, and the list is a flex
 // container, so any number of badges of any name length lays out correctly.
 //
-// This bundle reads the flarum globals rather than importing from flarum/*.
-// The components it patches (PostUser, CommentPost, DiscussionListItem) all sit
-// in lazy chunks, so they are reached through flarum.reg.onLoad instead.
+// The components this patches (PostUser, CommentPost, DiscussionListItem,
+// DiscussionHero) all sit in lazy chunks, so they are extended by STRING PATH
+// rather than by importing them: a runtime import would force their chunk to
+// load eagerly and defeat core's code splitting.
+
+import app from 'flarum/forum/app';
+import { extend, override } from 'flarum/common/extend';
+
+// Mithril is the global Flarum exposes, and core's own JSX compiles to these
+// same `m(...)` calls. Deliberately not imported: flarum-webpack-config does
+// not externalize mithril, so an import would bundle a second copy of it.
+const m = window.m;
 
 const EXT_ID = 'linkrobins-badge-labels';
 const ATTR = 'linkrobinsBadgeLabels';
@@ -50,8 +59,6 @@ function truthy(value) {
 }
 
 function forumAttribute(name, fallback) {
-  const app = window.app;
-
   try {
     if (app.forum && typeof app.forum.attribute === 'function') {
       const value = app.forum.attribute(name);
@@ -229,8 +236,6 @@ function labelFor(badge) {
 // `mode` is the labels setting: every badge, only the first (which is a user's
 // primary badge, and the discussion's most important one), or none at all.
 function badgeItems(badges, mode) {
-  const m = window.m;
-
   return badges
     .filter((badge) => badge)
     .map((badge, index) => {
@@ -279,7 +284,6 @@ function postCountFor(user) {
 }
 
 function postCountItem(user) {
-  const m = window.m;
   const count = postCountFor(user);
 
   if (count === null) return null;
@@ -296,11 +300,7 @@ function postCountItem(user) {
     },
     [
       m('span', { className: 'Badge LrBadgeLabels-countBadge' }, m('i', { className: 'icon fas fa-comment Badge-icon', 'aria-hidden': 'true' })),
-      m(
-        'span',
-        { className: 'LrBadgeLabels-label LrBadgeLabels-countLabel' },
-        window.app.translator.trans(EXT_ID + '.forum.post_count', { count: count })
-      ),
+      m('span', { className: 'LrBadgeLabels-label LrBadgeLabels-countLabel' }, app.translator.trans(EXT_ID + '.forum.post_count', { count: count })),
     ]
   );
 }
@@ -375,8 +375,6 @@ function stackCount(user) {
 // the post header has none of core's author-column rules to work around, and a
 // phone copy of the column list is only for the phone breakpoint.
 function badgeList(children, variant) {
-  const m = window.m;
-
   if (!children || !children.length) return null;
 
   // badges--packed (the overlapping-icon strip) is kept so phones still get
@@ -412,7 +410,6 @@ function discussionBadges(discussion) {
 }
 
 function discussionBadgeList(discussion, variant) {
-  const m = window.m;
   const children = badgeItems(discussionBadges(discussion), settings().labels);
 
   if (!children.length) return null;
@@ -427,149 +424,90 @@ function discussionBadgeList(discussion, variant) {
 
 // ---------------------------------------------------------------- extendables
 
-// Resolve a core component. The components this extension patches live in lazy
-// chunks, so they cannot simply be imported: flarum.reg.onLoad is what 2.x
-// gives us, firing when the chunk loads, or immediately if it is already in.
-function onCoreModule(path, callback) {
-  const unwrap = (mod) => (mod && mod.default ? mod.default : mod);
-
-  try {
-    const reg = window.flarum && window.flarum.reg;
-    if (reg && typeof reg.onLoad === 'function') {
-      reg.onLoad('core', path, (mod) => callback(unwrap(mod)));
-    }
-  } catch (e) {}
-}
-
-// Minimal `extend()` / `override()` so we don't depend on flarum/common/extend
-// resolving the same way on both majors.
-function extendMethod(proto, method, callback) {
-  const original = proto[method];
-
-  proto[method] = function (...args) {
-    const value = original.apply(this, args);
-    callback.call(this, value, ...args);
-    return value;
-  };
-}
-
-function overrideMethod(proto, method, callback) {
-  const original = proto[method];
-
-  proto[method] = function (...args) {
-    return callback.call(this, original.bind(this), ...args);
-  };
-}
-
-// Never patch twice: a re-fired module callback would otherwise rebuild a list
-// on top of an already rebuilt one.
-function patchOnce(component, flag, patch) {
-  if (!component || !component.prototype) return;
-  if (component.prototype[flag]) return;
-  component.prototype[flag] = true;
-
-  patch(component.prototype);
-}
-
-window.app.initializers.add(EXT_ID, () => {
+app.initializers.add(EXT_ID, () => {
   applyRootClasses();
 
-  onCoreModule('forum/components/PostUser', (PostUser) => {
-    patchOnce(PostUser, '_lrBadgeLabelsPatched', (proto) => {
-      extendMethod(proto, 'userViewItems', function (items, user, post) {
-        if (!items || typeof items.has !== 'function' || !items.has('postUser-badges')) return;
-        if (!user || typeof user.badges !== 'function') return;
+  extend('flarum/forum/components/PostUser', 'userViewItems', function (items, user, post) {
+    if (!items || typeof items.has !== 'function' || !items.has('postUser-badges')) return;
+    if (!user || typeof user.badges !== 'function') return;
 
-        try {
-          // Whatever the author column is holding: the badges, the post count,
-          // or both. When it is holding neither (they are all on the header
-          // line) core's own list goes with them, so that the timestamp keeps
-          // the username's company rather than being pushed below the badges.
-          const list = badgeList(itemsFor(user, 'below'), 'column');
+    try {
+      // Whatever the author column is holding: the badges, the post count, or
+      // both. When it is holding neither (they are all on the header line)
+      // core's own list goes with them, so that the timestamp keeps the
+      // username's company rather than being pushed below the badges.
+      const list = badgeList(itemsFor(user, 'below'), 'column');
 
-          if (list) {
-            items.setContent('postUser-badges', list);
-          } else {
-            items.remove('postUser-badges');
-          }
-        } catch (e) {
-          // Leave core's own badge list in place rather than blanking the author
-          // area if a badge from another extension surprises us.
-          console.error('[' + EXT_ID + ']', e);
-        }
-      });
-    });
+      if (list) {
+        items.setContent('postUser-badges', list);
+      } else {
+        items.remove('postUser-badges');
+      }
+    } catch (e) {
+      // Leave core's own badge list in place rather than blanking the author
+      // area if a badge from another extension surprises us.
+      console.error('[' + EXT_ID + ']', e);
+    }
   });
 
-  onCoreModule('forum/components/CommentPost', (CommentPost) => {
-    patchOnce(CommentPost, '_lrBadgeLabelsPatched', (proto) => patchCommentPost(proto));
-  });
+  patchCommentPost();
 
   const s = settings();
 
   // Nothing to label on a discussion when titles are turned off everywhere.
   if (s.discussionBadges && s.labels !== 'none') {
-    onCoreModule('forum/components/DiscussionListItem', (DiscussionListItem) => {
-      patchOnce(DiscussionListItem, '_lrBadgeLabelsPatched', (proto) => {
-        // The pills go on the line under the title, where there is room for
-        // them, so core's strip over the avatar would only repeat them. It is
-        // emptied rather than dropped: this list's content goes through an
-        // ItemList, which turns anything that is not an object into one, and an
-        // empty string or a null would reach Mithril as an object with no tag
-        // and take the whole discussion list down with it. An empty list draws
-        // nothing on either major.
-        overrideMethod(proto, 'badgesView', function (original) {
-          try {
-            if (!discussionBadges(this.attrs && this.attrs.discussion).length) return original();
+    // The pills go on the line under the title, where there is room for them,
+    // so core's strip over the avatar would only repeat them. It is emptied
+    // rather than dropped: this list's content goes through an ItemList, which
+    // turns anything that is not an object into one, and an empty string or a
+    // null would reach Mithril as an object with no tag and take the whole
+    // discussion list down with it. An empty list draws nothing.
+    override('flarum/forum/components/DiscussionListItem', 'badgesView', function (original) {
+      try {
+        if (!discussionBadges(this.attrs && this.attrs.discussion).length) return original();
 
-            return window.m('ul', { className: 'DiscussionListItem-badges badges' });
-          } catch (e) {
-            console.error('[' + EXT_ID + ']', e);
-            return original();
-          }
-        });
-
-        extendMethod(proto, 'infoItems', function (items) {
-          if (!items || typeof items.add !== 'function') return;
-
-          try {
-            const list = discussionBadgeList(this.attrs && this.attrs.discussion, 'row');
-
-            // First on the line, ahead of the tags and the last-post
-            // information, since that is the order they read in.
-            if (list) items.add('linkrobinsBadgeLabels', list, 100);
-          } catch (e) {
-            console.error('[' + EXT_ID + ']', e);
-          }
-        });
-      });
+        return m('ul', { className: 'DiscussionListItem-badges badges' });
+      } catch (e) {
+        console.error('[' + EXT_ID + ']', e);
+        return original();
+      }
     });
 
-    onCoreModule('forum/components/DiscussionHero', (DiscussionHero) => {
-      patchOnce(DiscussionHero, '_lrBadgeLabelsPatched', (proto) => {
-        extendMethod(proto, 'items', function (items) {
-          if (!items || typeof items.has !== 'function' || !items.has('badges')) return;
+    extend('flarum/forum/components/DiscussionListItem', 'infoItems', function (items) {
+      if (!items || typeof items.add !== 'function') return;
 
-          try {
-            const list = discussionBadgeList(this.attrs && this.attrs.discussion, 'hero');
+      try {
+        const list = discussionBadgeList(this.attrs && this.attrs.discussion, 'row');
 
-            if (list) items.setContent('badges', list);
-          } catch (e) {
-            console.error('[' + EXT_ID + ']', e);
-          }
-        });
-      });
+        // First on the line, ahead of the tags and the last-post information,
+        // since that is the order they read in.
+        if (list) items.add('linkrobinsBadgeLabels', list, 100);
+      } catch (e) {
+        console.error('[' + EXT_ID + ']', e);
+      }
+    });
+
+    extend('flarum/forum/components/DiscussionHero', 'items', function (items) {
+      if (!items || typeof items.has !== 'function' || !items.has('badges')) return;
+
+      try {
+        const list = discussionBadgeList(this.attrs && this.attrs.discussion, 'hero');
+
+        if (list) items.setContent('badges', list);
+      } catch (e) {
+        console.error('[' + EXT_ID + ']', e);
+      }
     });
   }
 });
 
-function patchCommentPost(proto) {
+function patchCommentPost() {
   // Below the avatar, the stylesheet lifts the badge list out of the document
   // flow (a float that tall dragged the post's height with it and knocked the
   // body out of line with the avatar). Out of flow, nothing reserves room for
   // the stack any more, and CSS cannot count badges to work out how much room
   // that is, so the count is published on the post element for it to read.
-  extendMethod(proto, 'elementAttrs', function (attrs) {
+  extend('flarum/forum/components/CommentPost', 'elementAttrs', function (attrs) {
     if (!attrs || typeof attrs !== 'object') return;
 
     try {
@@ -604,7 +542,7 @@ function patchCommentPost(proto) {
   // the way it does on a desktop, and the stylesheet shows whichever copy
   // belongs to the width. The copy is not rendered at all unless it can be
   // needed, so default settings produce exactly the markup they did before.
-  extendMethod(proto, 'headerItems', function (items) {
+  extend('flarum/forum/components/CommentPost', 'headerItems', function (items) {
     const s = settings();
     if (!items || typeof items.add !== 'function') return;
 
