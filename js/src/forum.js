@@ -12,8 +12,9 @@
 // that guess. A real element takes the width it needs, and the list is a flex
 // container, so any number of badges of any name length lays out correctly.
 //
-// This bundle imports NOTHING from flarum/* and feature-detects the globals
-// instead, so one artifact runs on both Flarum 1.8 and 2.x.
+// This bundle reads the flarum globals rather than importing from flarum/*.
+// The components it patches (PostUser, CommentPost, DiscussionListItem) all sit
+// in lazy chunks, so they are reached through flarum.reg.onLoad instead.
 
 const EXT_ID = 'linkrobins-badge-labels';
 const ATTR = 'linkrobinsBadgeLabels';
@@ -119,14 +120,6 @@ function headerHasContent(s) {
   return s.layout === 'beside' || (s.postCount && s.countLayout === 'beside') || (s.phone && columnHasContent(s));
 }
 
-function isTwoPointX() {
-  try {
-    return !!(window.flarum && window.flarum.reg);
-  } catch (e) {
-    return false;
-  }
-}
-
 // Everything the stylesheet keys off lives on the root element, so the CSS
 // never has to care which settings produced a given post.
 function applyRootClasses() {
@@ -154,9 +147,9 @@ function applyRootClasses() {
   if (columnHasContent(s)) classes.push('lrBadgeLabels--column', 'lrBadgeLabels--wide');
   if (headerHasContent(s)) classes.push('lrBadgeLabels--header');
 
-  // 1.x compiles the author column width in as a LESS variable; 2.x exposes it
-  // as a custom property. The two need different overrides.
-  classes.push(isTwoPointX() ? 'lrBadgeLabels--v2' : 'lrBadgeLabels--v1');
+  // 2.x exposes the author column width as a custom property, so widening it is
+  // one line in the stylesheet behind this class.
+  classes.push('lrBadgeLabels--v2');
 
   classes.forEach((name) => root.classList.add(name));
   root.style.setProperty('--lrbl-column-width', s.columnWidth + 'px');
@@ -434,9 +427,9 @@ function discussionBadgeList(discussion, variant) {
 
 // ---------------------------------------------------------------- extendables
 
-// Resolve a core component on either major: 2.x exposes lazy-chunk modules
-// through flarum.reg.onLoad (which fires when the chunk loads, or immediately
-// if it is already in); 1.x ships everything eagerly in flarum.core.compat.
+// Resolve a core component. The components this extension patches live in lazy
+// chunks, so they cannot simply be imported: flarum.reg.onLoad is what 2.x
+// gives us, firing when the chunk loads, or immediately if it is already in.
 function onCoreModule(path, callback) {
   const unwrap = (mod) => (mod && mod.default ? mod.default : mod);
 
@@ -444,13 +437,7 @@ function onCoreModule(path, callback) {
     const reg = window.flarum && window.flarum.reg;
     if (reg && typeof reg.onLoad === 'function') {
       reg.onLoad('core', path, (mod) => callback(unwrap(mod)));
-      return;
     }
-  } catch (e) {}
-
-  try {
-    const compat = window.flarum && window.flarum.core && window.flarum.core.compat;
-    if (compat && compat[path]) callback(unwrap(compat[path]));
   } catch (e) {}
 }
 
