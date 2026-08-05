@@ -400,6 +400,22 @@
   // unless the admin asks for them. Only in a post, though: a discussion's
   // badges are laid out on a line with room for them at every width.
   html:not(.lrBadgeLabels--phone) {
+    // Core pulls every badge 10px to the left so that a strip of them overlaps
+    // into a packed clump, and on this major that pull is unconditional with
+    // nothing padding the list to make up for it: the FIRST badge hangs 10px
+    // past where the list actually starts. (2.x pairs the same pull with a
+    // matching padding-inline-start on .badges--packed, which is why only this
+    // major needs the fix.) Behind the post's time that overhang was invisible,
+    // since there was only the end of the line to its left. In front of it, it
+    // eats core's own 10px gap between header items and the badges end up
+    // against the username.
+    //
+    // Only the first badge: the rest overlapping each other is the packed look
+    // this width is meant to keep when the admin has not opted into labels.
+    &.lrBadgeLabels--headerFirst .LrBadgeLabels-list--header > li:first-child .Badge {
+      margin-left: 0;
+    }
+
     .PostUser-badges.LrBadgeLabels-list {
       .LrBadgeLabels-label,
       .LrBadgeLabels-countItem {
