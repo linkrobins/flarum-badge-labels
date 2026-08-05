@@ -68,6 +68,7 @@ class PostAuthorPayloadTest extends TestCase
         $this->fail('The post author was not included with the discussion.');
     }
 
+    /** @test */
     #[Test]
     public function a_post_author_carries_their_post_count(): void
     {
@@ -77,6 +78,7 @@ class PostAuthorPayloadTest extends TestCase
         $this->assertEquals(7, $author['attributes']['commentCount']);
     }
 
+    /** @test */
     #[Test]
     public function a_post_author_carries_the_groups_their_badges_come_from(): void
     {

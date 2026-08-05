@@ -9,7 +9,7 @@ Out of the box Flarum shows badges as small icons tucked over the corner of the 
 ## What it does
 
 - **Full badge titles.** Each badge becomes one pill: its icon at the rounded left end, its name at the right, in the badge's own colour with readable text on light and dark badges alike. Title every badge, or only the first one, which is a member's main badge.
-- **Badge placement.** Put the badges in a column below the avatar (the author column widens to make room), or on the post header line beside the username, where they follow the timestamp.
+- **Badge placement.** Put the badges in a column below the avatar (the author column widens to make room), or on the post header line beside the username. On that line they can follow the post's time or sit in front of it, next to the username.
 - **Post count.** Optionally show how many posts the author has written, as a pill of its own in the theme's neutral badge colour, so it is never mistaken for a group. It can follow the badges or take the other placement, so the count sits under the avatar while the badges stay beside the username.
 - **Discussion badges.** Optionally give the same pills to a discussion's own badges, such as sticky and locked. In the discussion list they move to the line under the title, where there is room for their names.
 - **Phones.** Off by default there, since phones show a compact post header. One switch turns it on.
@@ -21,6 +21,8 @@ Every badge is covered, not just group badges: the title comes from whatever eac
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Badge placement | Below the avatar | Below the avatar, or beside the username |
+| Badge position on the header line | After the time | Which side of the post's time the badges sit on |
+| Badge arrangement | One per row | How the badges under the avatar are laid out: one per row, centered, or centered with icons sharing rows |
 | Show full badge titles | On every badge | Every badge, the first badge only, or icons only |
 | Show the author's post count | On | The number of posts the author has written |
 | Post count placement | With the badges | With the badges, below the avatar, or beside the username |
@@ -31,7 +33,7 @@ Every badge is covered, not just group badges: the title comes from whatever eac
 
 ## Compatibility
 
-Works on **Flarum 1.8** and **Flarum 2.x** from the same release, with no configuration differences between the two.
+This is the **Flarum 2.x** release line. Flarum 1.8 forums install the 1.x line of the same package, which has the same features and the same settings; Composer picks the right one for your forum on its own.
 
 Nothing is added to your database and nothing is added to what your forum sends to visitors: the post count is the one Flarum already publishes on member profiles, and the extension only decides whether to draw it.
 

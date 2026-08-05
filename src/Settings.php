@@ -17,6 +17,7 @@ final class Settings
     public const PREFIX = 'linkrobins-badge-labels.';
 
     public const LAYOUT = self::PREFIX.'layout';
+    public const HEADER_POSITION = self::PREFIX.'header_position';
     public const ARRANGEMENT = self::PREFIX.'arrangement';
     public const LABELS = self::PREFIX.'labels';
     public const POST_COUNT = self::PREFIX.'post_count';
@@ -38,6 +39,23 @@ final class Settings
     public const LAYOUTS = ['below', 'beside'];
 
     public const DEFAULT_LAYOUT = 'below';
+
+    /**
+     * Where on the post header line the badges sit, relative to the time the
+     * post was written:
+     *
+     *   after   following the time, at the end of the line
+     *   before  between the username and the time
+     *
+     * Only the header line has a position. Badges in the author column are in
+     * a column of their own and have nothing to be ordered against.
+     *
+     * The default is where they have always been, so upgrading changes
+     * nothing until an admin picks the other one.
+     */
+    public const HEADER_POSITIONS = ['after', 'before'];
+
+    public const DEFAULT_HEADER_POSITION = 'after';
 
     /**
      * How the badges under the avatar are arranged in the author column:
@@ -100,6 +118,16 @@ final class Settings
         $layout = is_string($value) ? strtolower(trim($value)) : '';
 
         return in_array($layout, self::LAYOUTS, true) ? $layout : self::DEFAULT_LAYOUT;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public static function headerPosition($value): string
+    {
+        $position = is_string($value) ? strtolower(trim($value)) : '';
+
+        return in_array($position, self::HEADER_POSITIONS, true) ? $position : self::DEFAULT_HEADER_POSITION;
     }
 
     /**

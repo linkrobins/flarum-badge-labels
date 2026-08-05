@@ -37,12 +37,14 @@ class SettingsPayloadTest extends TestCase
         return json_decode($response->getBody()->getContents(), true)['data']['attributes'];
     }
 
+    /** @test */
     #[Test]
     public function the_defaults_reach_the_frontend(): void
     {
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('below', $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals(Settings::DEFAULT_HEADER_POSITION, $attributes['linkrobinsBadgeLabelsHeaderPosition']);
         $this->assertEquals(Settings::DEFAULT_ARRANGEMENT, $attributes['linkrobinsBadgeLabelsArrangement']);
         $this->assertEquals(Settings::DEFAULT_LABELS, $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertTrue($attributes['linkrobinsBadgeLabelsPostCount']);
@@ -53,10 +55,12 @@ class SettingsPayloadTest extends TestCase
         $this->assertEquals(Settings::DEFAULT_AVATAR_GAP, $attributes['linkrobinsBadgeLabelsAvatarGap']);
     }
 
+    /** @test */
     #[Test]
     public function saved_settings_reach_the_frontend(): void
     {
         $this->setting(Settings::LAYOUT, 'beside');
+        $this->setting(Settings::HEADER_POSITION, 'before');
         $this->setting(Settings::ARRANGEMENT, 'grid');
         $this->setting(Settings::LABELS, 'first');
         $this->setting(Settings::POST_COUNT, '0');
@@ -69,6 +73,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('beside', $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals('before', $attributes['linkrobinsBadgeLabelsHeaderPosition']);
         $this->assertEquals('grid', $attributes['linkrobinsBadgeLabelsArrangement']);
         $this->assertEquals('first', $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertFalse($attributes['linkrobinsBadgeLabelsPostCount']);
@@ -84,6 +89,8 @@ class SettingsPayloadTest extends TestCase
      * the settings table until the admin saves the page again. The two states
      * are separate tests because settings are staged into the app as it boots,
      * which the first request of a test does.
+     *
+     * @test
      */
     #[Test]
     public function a_ticked_label_checkbox_from_before_reads_as_every_badge(): void
@@ -93,6 +100,7 @@ class SettingsPayloadTest extends TestCase
         $this->assertEquals('all', $this->forumAttributes()['linkrobinsBadgeLabelsLabels']);
     }
 
+    /** @test */
     #[Test]
     public function an_unticked_label_checkbox_from_before_reads_as_no_titles(): void
     {
@@ -101,12 +109,14 @@ class SettingsPayloadTest extends TestCase
         $this->assertEquals('none', $this->forumAttributes()['linkrobinsBadgeLabelsLabels']);
     }
 
+    /** @test */
     #[Test]
     public function a_hand_edited_settings_row_is_normalized_before_it_is_sent(): void
     {
         // These values land in a class name and a CSS custom property, so they
         // are normalized on the way out rather than trusted as stored.
         $this->setting(Settings::LAYOUT, 'somewhere-else');
+        $this->setting(Settings::HEADER_POSITION, 'above');
         $this->setting(Settings::LABELS, 'sometimes');
         $this->setting(Settings::POST_COUNT_PLACEMENT, 'sidebar');
         $this->setting(Settings::COLUMN_WIDTH, '9999');
@@ -115,6 +125,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals(Settings::DEFAULT_LAYOUT, $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals(Settings::DEFAULT_HEADER_POSITION, $attributes['linkrobinsBadgeLabelsHeaderPosition']);
         $this->assertEquals(Settings::DEFAULT_LABELS, $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertEquals(Settings::DEFAULT_POST_COUNT_PLACEMENT, $attributes['linkrobinsBadgeLabelsPostCountPlacement']);
         $this->assertEquals(Settings::MAX_COLUMN_WIDTH, $attributes['linkrobinsBadgeLabelsColumnWidth']);
