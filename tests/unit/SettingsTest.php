@@ -15,6 +15,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class SettingsTest extends TestCase
 {
+    /** @test */
     #[Test]
     public function known_layouts_pass_through(): void
     {
@@ -22,6 +23,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('beside', Settings::layout('beside'));
     }
 
+    /** @test */
     #[Test]
     public function an_unknown_layout_falls_back_to_the_default(): void
     {
@@ -35,12 +37,14 @@ class SettingsTest extends TestCase
         $this->assertEquals('below', Settings::layout(['below']));
     }
 
+    /** @test */
     #[Test]
     public function layouts_are_read_case_insensitively_and_trimmed(): void
     {
         $this->assertEquals('beside', Settings::layout(' Beside '));
     }
 
+    /** @test */
     #[Test]
     public function known_header_positions_pass_through(): void
     {
@@ -49,6 +53,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('before', Settings::headerPosition(' Before '));
     }
 
+    /** @test */
     #[Test]
     public function an_unknown_header_position_falls_back_to_the_default(): void
     {
@@ -61,6 +66,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('after', Settings::headerPosition(['before']));
     }
 
+    /** @test */
     #[Test]
     public function an_upgraded_forum_with_no_header_position_keeps_the_old_order(): void
     {
@@ -70,6 +76,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('after', Settings::DEFAULT_HEADER_POSITION);
     }
 
+    /** @test */
     #[Test]
     public function the_column_width_is_clamped_to_a_usable_range(): void
     {
@@ -82,6 +89,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(200, Settings::columnWidth('200'));
     }
 
+    /** @test */
     #[Test]
     public function a_non_numeric_column_width_falls_back_to_the_default(): void
     {
@@ -90,6 +98,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(Settings::DEFAULT_COLUMN_WIDTH, Settings::columnWidth([]));
     }
 
+    /** @test */
     #[Test]
     public function known_label_modes_pass_through(): void
     {
@@ -99,6 +108,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('first', Settings::labels(' First '));
     }
 
+    /** @test */
     #[Test]
     public function the_label_mode_reads_the_checkbox_it_used_to_be(): void
     {
@@ -110,6 +120,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('none', Settings::labels(false));
     }
 
+    /** @test */
     #[Test]
     public function an_unknown_label_mode_falls_back_to_the_default(): void
     {
@@ -119,6 +130,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(Settings::DEFAULT_LABELS, Settings::labels(['all']));
     }
 
+    /** @test */
     #[Test]
     public function known_post_count_placements_pass_through(): void
     {
@@ -127,6 +139,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('beside', Settings::postCountPlacement(' Beside '));
     }
 
+    /** @test */
     #[Test]
     public function an_unknown_post_count_placement_falls_back_to_the_default(): void
     {
@@ -135,6 +148,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(Settings::DEFAULT_POST_COUNT_PLACEMENT, Settings::postCountPlacement(7));
     }
 
+    /** @test */
     #[Test]
     public function the_avatar_gap_is_clamped_to_a_usable_range(): void
     {
@@ -146,6 +160,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(12, Settings::avatarGap('12'));
     }
 
+    /** @test */
     #[Test]
     public function a_non_numeric_avatar_gap_falls_back_to_the_default(): void
     {
@@ -154,6 +169,7 @@ class SettingsTest extends TestCase
         $this->assertEquals(Settings::DEFAULT_AVATAR_GAP, Settings::avatarGap([]));
     }
 
+    /** @test */
     #[Test]
     public function known_arrangements_pass_through(): void
     {
@@ -162,6 +178,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('grid', Settings::arrangement('grid'));
     }
 
+    /** @test */
     #[Test]
     public function an_unknown_arrangement_falls_back_to_the_default(): void
     {
@@ -174,6 +191,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('rows', Settings::arrangement(['grid']));
     }
 
+    /** @test */
     #[Test]
     public function arrangements_are_read_case_insensitively_and_trimmed(): void
     {
@@ -181,6 +199,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('centered', Settings::arrangement('Centered'));
     }
 
+    /** @test */
     #[Test]
     public function an_upgraded_forum_with_no_arrangement_keeps_the_old_look(): void
     {
@@ -190,6 +209,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('rows', Settings::DEFAULT_ARRANGEMENT);
     }
 
+    /** @test */
     #[Test]
     public function settings_stored_as_strings_read_as_booleans(): void
     {
