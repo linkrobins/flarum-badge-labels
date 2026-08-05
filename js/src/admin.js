@@ -27,6 +27,17 @@ function settings() {
       default: 'below',
     },
     {
+      setting: PREFIX + 'header_position',
+      label: trans('header_position_label'),
+      help: trans('header_position_help'),
+      type: 'select',
+      options: {
+        after: trans('header_position_after'),
+        before: trans('header_position_before'),
+      },
+      default: 'after',
+    },
+    {
       setting: PREFIX + 'arrangement',
       label: trans('arrangement_label'),
       help: trans('arrangement_help'),

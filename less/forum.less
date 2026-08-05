@@ -22,6 +22,7 @@
 //   --beside      badges next to the username
 //   --column      something (badges, the count, or both) is in the author column
 //   --wide        the author column has to make room for it
+//   --headerFirst those header lists come before the post's time, not after it
 //   --discussions label a discussion's badges too
 //   --phone       apply on phones as well
 //   --v1          the Flarum 1.x author column, redone by hand
@@ -399,6 +400,26 @@
   // unless the admin asks for them. Only in a post, though: a discussion's
   // badges are laid out on a line with room for them at every width.
   html:not(.lrBadgeLabels--phone) {
+    // Core pulls every badge to the left so that a strip of them overlaps into
+    // a packed clump: -10px normally, and -13px at this width, where it also
+    // shrinks them to 20px for the compact header. On this major that pull is
+    // unconditional with nothing padding the list to make up for it, so the
+    // FIRST badge hangs past where the list actually starts. (2.x pairs the
+    // same pull with a matching padding-inline-start on .badges--packed, so its
+    // first badge nets out flush; this major has no --packed class at all,
+    // which is why only this one needs the fix.)
+    //
+    // Behind the post's time that overhang was invisible, since there was only
+    // the end of the line to its left. In front of it, it comes off core's own
+    // 10px gap between header items, and -13px does not just close that gap: it
+    // carries the badge 3px over the username.
+    //
+    // Only the first badge: the rest overlapping each other is the packed look
+    // this width is meant to keep when the admin has not opted into labels.
+    &.lrBadgeLabels--headerFirst .LrBadgeLabels-list--header > li:first-child .Badge {
+      margin-left: 0;
+    }
+
     .PostUser-badges.LrBadgeLabels-list {
       .LrBadgeLabels-label,
       .LrBadgeLabels-countItem {
@@ -438,6 +459,26 @@
     &.lrBadgeLabels--column {
       .PostUser-badges.LrBadgeLabels-list:not(.LrBadgeLabels-list--header) {
         display: none;
+      }
+    }
+
+    // Before the time, a list on the header line is no longer the last thing on
+    // it, so it cannot go on taking a line of its own: block-level here, it
+    // would split the line and leave the time stranded below the badges, which
+    // is the same thing that made the phone copy necessary in the first place.
+    // Inline, the pills follow the username and the time follows them, which is
+    // the order the setting asks for and the shape the line already has at
+    // every other width. A group too wide for what is left of the line still
+    // moves down whole, at the break the header rules give it, and takes the
+    // time with it.
+    //
+    // Chained rather than nested (both classes are on <html>), and carrying all
+    // three list classes, so that it outranks the block-level rule above.
+    &.lrBadgeLabels--headerFirst {
+      .PostUser-badges.LrBadgeLabels-list.LrBadgeLabels-list--header {
+        display: inline-flex;
+        vertical-align: middle;
+        margin: 0;
       }
     }
   }
