@@ -20,6 +20,8 @@ const ATTR = 'linkrobinsBadgeLabels';
 
 const LAYOUTS = ['below', 'beside'];
 const DEFAULT_LAYOUT = 'below';
+const HEADER_POSITIONS = ['after', 'before'];
+const DEFAULT_HEADER_POSITION = 'after';
 const ARRANGEMENTS = ['rows', 'centered', 'grid'];
 const DEFAULT_ARRANGEMENT = 'rows';
 const LABEL_MODES = ['all', 'first', 'none'];
@@ -41,6 +43,12 @@ const COLUMN_INSET = 15;
 const DEFAULT_AVATAR_GAP = 4;
 const MIN_AVATAR_GAP = 0;
 const MAX_AVATAR_GAP = 60;
+
+// Where our lists sit on the post header line. Core adds the username at 100 and
+// everything else on that line (the timestamp, the edited marker) at the default
+// priority of 0, so "after" has to clear that whole group and "before" has to
+// land in the gap above it, still behind the username.
+const HEADER_PRIORITIES = { after: -10, before: 50 };
 
 // ------------------------------------------------------------------ settings
 
@@ -79,6 +87,7 @@ function settings() {
   if (cached) return cached;
 
   const layout = String(forumAttribute(ATTR + 'Layout', DEFAULT_LAYOUT));
+  const headerPosition = String(forumAttribute(ATTR + 'HeaderPosition', DEFAULT_HEADER_POSITION));
   const arrangement = String(forumAttribute(ATTR + 'Arrangement', DEFAULT_ARRANGEMENT));
   const width = parseInt(forumAttribute(ATTR + 'ColumnWidth', DEFAULT_COLUMN_WIDTH), 10);
   const gap = parseInt(forumAttribute(ATTR + 'AvatarGap', DEFAULT_AVATAR_GAP), 10);
@@ -91,6 +100,7 @@ function settings() {
 
   cached = {
     layout: LAYOUTS.indexOf(layout) >= 0 ? layout : DEFAULT_LAYOUT,
+    headerPosition: HEADER_POSITIONS.indexOf(headerPosition) >= 0 ? headerPosition : DEFAULT_HEADER_POSITION,
     arrangement: ARRANGEMENTS.indexOf(arrangement) >= 0 ? arrangement : DEFAULT_ARRANGEMENT,
     labels: LABEL_MODES.indexOf(labels) >= 0 ? labels : DEFAULT_LABELS,
     postCount: truthy(forumAttribute(ATTR + 'PostCount', true)),
@@ -144,7 +154,15 @@ function applyRootClasses() {
   // badges, the post count, or both. When it is empty (badges and count both
   // beside the username) it is left exactly as Flarum ships it.
   if (columnHasContent(s)) classes.push('lrBadgeLabels--column', 'lrBadgeLabels--wide');
-  if (headerHasContent(s)) classes.push('lrBadgeLabels--header');
+
+  if (headerHasContent(s)) {
+    classes.push('lrBadgeLabels--header');
+
+    // Like the arrangement, the position only reaches the stylesheet when it is
+    // not the one every forum already had, so the default keeps exactly the
+    // rules it had before.
+    if (s.headerPosition === 'before') classes.push('lrBadgeLabels--headerFirst');
+  }
 
   // 1.x compiles the author column width in as a LESS variable, so every rule
   // that used it is redone by hand in the stylesheet behind this class.
@@ -596,10 +614,10 @@ function patchCommentPost(proto) {
   // admin has asked for labels on phones, because that is the one case where
   // the author column does not exist: core collapses it, so a list left in
   // there sits between the username and the timestamp and pushes the timestamp
-  // onto a line of its own. In the header it lands after the timestamp instead,
-  // the way it does on a desktop, and the stylesheet shows whichever copy
-  // belongs to the width. The copy is not rendered at all unless it can be
-  // needed, so default settings produce exactly the markup they did before.
+  // onto a line of its own. In the header it lands with the other header lists
+  // instead, and the stylesheet shows whichever copy belongs to the width. The
+  // copy is not rendered at all unless it can be needed, so default settings
+  // produce exactly the markup they did before.
   extendMethod(proto, 'headerItems', function (items) {
     const s = settings();
     if (!items || typeof items.add !== 'function') return;
@@ -609,16 +627,23 @@ function patchCommentPost(proto) {
       const user = post && typeof post.user === 'function' ? post.user() : null;
       if (!user || typeof user.badges !== 'function') return;
 
-      // Added last, so they follow the timestamp (and anything else another
-      // extension puts on the header line) instead of interrupting it.
+      // Either side of the timestamp, whichever the admin asked for. Last on
+      // the line by default, so the badges follow the timestamp (and anything
+      // else another extension puts there) instead of interrupting it; first
+      // when the admin would rather have them against the username, which is
+      // where a reader looks for something that belongs to the author rather
+      // than to the post.
+      const priority = HEADER_PRIORITIES[s.headerPosition];
+
       const header = badgeList(itemsFor(user, 'beside'), 'header');
-      if (header) items.add('linkrobinsBadgeLabels', header, -10);
+      if (header) items.add('linkrobinsBadgeLabels', header, priority);
 
       if (s.phone) {
         const phone = badgeList(itemsFor(user, 'below'), 'phone');
         // Whichever copy holds the badges goes first, so a post count that has
-        // been sent to the other placement still reads as following them.
-        if (phone) items.add('linkrobinsBadgeLabelsPhone', phone, s.layout === 'below' ? -9 : -11);
+        // been sent to the other placement still reads as following them. The
+        // pair stays together on the side of the timestamp the admin picked.
+        if (phone) items.add('linkrobinsBadgeLabelsPhone', phone, priority + (s.layout === 'below' ? 1 : -1));
       }
     } catch (e) {
       console.error('[' + EXT_ID + ']', e);

@@ -43,6 +43,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('below', $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals(Settings::DEFAULT_HEADER_POSITION, $attributes['linkrobinsBadgeLabelsHeaderPosition']);
         $this->assertEquals(Settings::DEFAULT_ARRANGEMENT, $attributes['linkrobinsBadgeLabelsArrangement']);
         $this->assertEquals(Settings::DEFAULT_LABELS, $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertTrue($attributes['linkrobinsBadgeLabelsPostCount']);
@@ -57,6 +58,7 @@ class SettingsPayloadTest extends TestCase
     public function saved_settings_reach_the_frontend(): void
     {
         $this->setting(Settings::LAYOUT, 'beside');
+        $this->setting(Settings::HEADER_POSITION, 'before');
         $this->setting(Settings::ARRANGEMENT, 'grid');
         $this->setting(Settings::LABELS, 'first');
         $this->setting(Settings::POST_COUNT, '0');
@@ -69,6 +71,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals('beside', $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals('before', $attributes['linkrobinsBadgeLabelsHeaderPosition']);
         $this->assertEquals('grid', $attributes['linkrobinsBadgeLabelsArrangement']);
         $this->assertEquals('first', $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertFalse($attributes['linkrobinsBadgeLabelsPostCount']);
@@ -107,6 +110,7 @@ class SettingsPayloadTest extends TestCase
         // These values land in a class name and a CSS custom property, so they
         // are normalized on the way out rather than trusted as stored.
         $this->setting(Settings::LAYOUT, 'somewhere-else');
+        $this->setting(Settings::HEADER_POSITION, 'above');
         $this->setting(Settings::LABELS, 'sometimes');
         $this->setting(Settings::POST_COUNT_PLACEMENT, 'sidebar');
         $this->setting(Settings::COLUMN_WIDTH, '9999');
@@ -115,6 +119,7 @@ class SettingsPayloadTest extends TestCase
         $attributes = $this->forumAttributes();
 
         $this->assertEquals(Settings::DEFAULT_LAYOUT, $attributes['linkrobinsBadgeLabelsLayout']);
+        $this->assertEquals(Settings::DEFAULT_HEADER_POSITION, $attributes['linkrobinsBadgeLabelsHeaderPosition']);
         $this->assertEquals(Settings::DEFAULT_LABELS, $attributes['linkrobinsBadgeLabelsLabels']);
         $this->assertEquals(Settings::DEFAULT_POST_COUNT_PLACEMENT, $attributes['linkrobinsBadgeLabelsPostCountPlacement']);
         $this->assertEquals(Settings::MAX_COLUMN_WIDTH, $attributes['linkrobinsBadgeLabelsColumnWidth']);
