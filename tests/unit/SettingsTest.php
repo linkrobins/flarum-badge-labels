@@ -42,6 +42,35 @@ class SettingsTest extends TestCase
     }
 
     #[Test]
+    public function known_header_positions_pass_through(): void
+    {
+        $this->assertEquals('after', Settings::headerPosition('after'));
+        $this->assertEquals('before', Settings::headerPosition('before'));
+        $this->assertEquals('before', Settings::headerPosition(' Before '));
+    }
+
+    #[Test]
+    public function an_unknown_header_position_falls_back_to_the_default(): void
+    {
+        // This decides an ItemList priority on the post header line, so an
+        // unrecognised value has to become a known one rather than be passed on.
+        $this->assertEquals('after', Settings::headerPosition('above'));
+        $this->assertEquals('after', Settings::headerPosition(''));
+        $this->assertEquals('after', Settings::headerPosition(null));
+        $this->assertEquals('after', Settings::headerPosition(42));
+        $this->assertEquals('after', Settings::headerPosition(['before']));
+    }
+
+    #[Test]
+    public function an_upgraded_forum_with_no_header_position_keeps_the_old_order(): void
+    {
+        // Every forum on v1.2.1 / v2.0.1 and earlier has nothing stored for
+        // this, and must go on showing the badges after the post's time.
+        $this->assertEquals(Settings::DEFAULT_HEADER_POSITION, Settings::headerPosition(null));
+        $this->assertEquals('after', Settings::DEFAULT_HEADER_POSITION);
+    }
+
+    #[Test]
     public function the_column_width_is_clamped_to_a_usable_range(): void
     {
         // Narrower than the column Flarum ships would clip the avatar; wider
