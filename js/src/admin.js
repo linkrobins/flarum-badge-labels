@@ -63,7 +63,18 @@ function settings() {
       label: trans('post_count_label'),
       help: trans('post_count_help'),
       type: 'boolean',
-      default: true,
+      // Deliberately no `default: true`, and it must stay that way.
+      //
+      // Core seeds the field with `app.data.settings[key] || fallback`. Turning
+      // a switch off stores an empty string, which is falsy, so a `true`
+      // fallback wins and the switch reads back ON after a refresh, undoing in
+      // appearance what the admin just saved, and re-enabling the setting for
+      // real if they then press Save again. Reported on discuss d/39622 #19.
+      //
+      // The default belongs on the server, where extend.php already declares
+      // POST_COUNT as '1'. That reaches the admin page in the same settings
+      // payload, so a forum that has never touched this still shows it on, and
+      // one that turned it off keeps it off.
     },
     {
       setting: PREFIX + 'post_count_placement',
