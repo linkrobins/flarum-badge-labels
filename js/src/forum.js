@@ -472,8 +472,18 @@ app.initializers.add(EXT_ID, () => {
 
   const s = settings();
 
-  // Nothing to label on a discussion when titles are turned off everywhere.
-  if (s.discussionBadges && s.labels !== 'none') {
+  // Deliberately not gated on the labels setting. This moves a discussion's
+  // badges out of core's narrow strip over the avatar and onto the line under
+  // the title, and that is worth doing whether or not they end up named there:
+  // the strip overlaps the avatar either way. badgeItems() already renders an
+  // unlabelled badge as a plain circle when titles are off, so the labels
+  // setting keeps deciding the naming and this one decides the placement,
+  // rather than one quietly switching the other off.
+  //
+  // It used to require labels !== 'none', which meant an admin could turn this
+  // on, see nothing happen, and get no explanation. Reported on discuss
+  // d/39622 #19.
+  if (s.discussionBadges) {
     // The pills go on the line under the title, where there is room for them,
     // so core's strip over the avatar would only repeat them. It is emptied
     // rather than dropped: this list's content goes through an ItemList, which
