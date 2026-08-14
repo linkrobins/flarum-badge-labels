@@ -539,17 +539,22 @@
     display: inline;
   }
 
-  // Shown at every width. Core hides this on phones, and the whole point here
-  // is that desktop and mobile agree.
+  // Flarum ships TWO avatars per post: one in .Post-side (the column) and one
+  // inside .PostUser in the header. Core shows exactly one at a time, hiding
+  // .Post-header .Post-avatar on desktop and .Post-side .Post-avatar on phones.
   //
-  // .Post-avatar IS the avatar element (class="Avatar Post-avatar"), not a
-  // wrapper around one, so it is sized directly. Sizing a descendant matches
-  // nothing and leaves it at full column size.
-  .Post-avatar {
+  // Be explicit about which, at every width. A blanket .Post-avatar rule turns
+  // BOTH on, and the header copy then sits inside the username link as a 34px
+  // block, which pushes the username onto its own line under it.
+  .Post-side .Post-avatar {
     display: block;
     width: @lrbl-inline-avatar;
     height: @lrbl-inline-avatar;
     font-size: 15px;
+  }
+
+  .Post-header .Post-avatar {
+    display: none;
   }
 }
 
