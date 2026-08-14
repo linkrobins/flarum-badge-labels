@@ -529,11 +529,12 @@
 
   // Shown at every width. Core hides this on phones, and the whole point here
   // is that desktop and mobile agree.
+  //
+  // .Post-avatar IS the avatar element (class="Avatar Post-avatar"), not a
+  // wrapper around one, so it is sized directly. Sizing a descendant matches
+  // nothing and leaves it at full column size.
   .Post-avatar {
     display: block;
-  }
-
-  .Post-avatar .Avatar {
     width: @lrbl-inline-avatar;
     height: @lrbl-inline-avatar;
     font-size: 15px;
