@@ -367,45 +367,6 @@
     --avatar-column-width: var(--lrbl-column-width, 150px);
   }
 
-  // ---------------------------------------------------------------------
-  // Collapsing the author column
-  //
-  // Flarum sizes the author column from --avatar-column-width, so taking it to
-  // zero is the whole trick: the avatar moves up into the post header and the
-  // post reads the way it already does on a phone. Grown from a CSS tweak by
-  // Tutrix on the Flarum community forum, discuss d/39663.
-  //
-  // --collapsed      applies to every post
-  // --collapsedFirst narrows that to a discussion's opening post
-  //
-  // The selector is written once and reused for both, so the two modes cannot
-  // drift apart. `.lrbl-collapse()` is called with the scope to apply it to.
-  // ---------------------------------------------------------------------
-  .lrbl-collapse() {
-    // Flarum lays a post out as a grid whose first column is sized from this
-    // property, and PostStream's own left padding reads it too, so taking it to
-    // zero flushes the whole post left with no offsets to maintain.
-    --avatar-column-width: 0px;
-
-    // The avatar goes with the column, which is exactly what core does on a
-    // phone (@phone hides .Post-avatar). It is not optional: the avatar is not
-    // inside the grid cell, so leaving it visible drops it on top of the
-    // username. That is why the hand-rolled versions of this need pixel offsets
-    // on the header to shift the text clear of it.
-    .Post-avatar {
-      display: none;
-    }
-  }
-
-  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .Post-container {
-    .lrbl-collapse();
-  }
-
-  // Only the opening post. Flarum puts the post number on the stream item, so
-  // this needs no marker of its own.
-  .lrBadgeLabels--collapsedFirst .PostStream-item[data-number='1'] .Post-container {
-    .lrbl-collapse();
-  }
 
 
 }
@@ -530,4 +491,61 @@
       margin: 0 0 2px;
     }
   }
+}
+
+// -----------------------------------------------------------------------
+// Collapsing the author column
+//
+// Flarum reserves a fixed column down the left of every post, sized from
+// --avatar-column-width, and puts the avatar in it. This takes the column away
+// and floats the avatar at the head of the post instead, so the text closes up
+// around it.
+//
+// Deliberately OUTSIDE any media query. Core hides the avatar on phones and
+// keeps the column on desktop, so a forum reads differently on the two; the
+// point of this option is that it reads the same on both.
+//
+// Grown from a CSS tweak by Tutrix on the Flarum community forum, d/39663.
+//
+//   --collapsed      applies to every post
+//   --collapsedFirst narrows that to a discussion's opening post
+// -----------------------------------------------------------------------
+@lrbl-inline-avatar: 34px;
+
+.lrbl-collapse() {
+  // Nothing is reserving space any more: PostStream's left padding reads this
+  // property too, so the post flushes left on its own.
+  --avatar-column-width: 0px;
+
+  // The container is a grid by default, with the avatar in column one. Block
+  // layout is what lets a float work.
+  display: block;
+
+  .Post-side {
+    float: left;
+    width: auto;
+    margin: 0 10px 2px 0;
+  }
+
+  // Shown at every width. Core hides this on phones, and the whole point here
+  // is that desktop and mobile agree.
+  .Post-avatar {
+    display: block;
+  }
+
+  .Post-avatar .Avatar {
+    width: @lrbl-inline-avatar;
+    height: @lrbl-inline-avatar;
+    font-size: 15px;
+  }
+}
+
+.lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .Post-container {
+  .lrbl-collapse();
+}
+
+// Only the opening post. Flarum already puts the post number on the stream
+// item, so this needs no marker of its own.
+.lrBadgeLabels--collapsedFirst .PostStream-item[data-number='1'] .Post-container {
+  .lrbl-collapse();
 }
