@@ -548,9 +548,12 @@
   // block, which pushes the username onto its own line under it.
   .Post-side .Post-avatar {
     display: block;
-    width: @lrbl-inline-avatar;
-    height: @lrbl-inline-avatar;
-    font-size: 15px;
+
+    // Core sizes an avatar from a --size custom property and derives the
+    // width, height and the font-size of the initial from it. Setting width
+    // and height by hand leaves the initial sized for the old avatar and it
+    // spills out of the circle, so use core's own mixin.
+    .Avatar--size(@lrbl-inline-avatar);
   }
 
   .Post-header .Post-avatar {
