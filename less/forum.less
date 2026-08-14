@@ -229,9 +229,6 @@
   content: '\200B';
 }
 
-// How big the avatar is once it moves out of the column and into the header.
-@lrbl-collapsed-avatar: 32px;
-
 @media @tablet-up {
   .PostUser-badges.LrBadgeLabels-list {
     .lrbl-flow();
@@ -385,42 +382,18 @@
   // drift apart. `.lrbl-collapse()` is called with the scope to apply it to.
   // ---------------------------------------------------------------------
   .lrbl-collapse() {
+    // Flarum lays a post out as a grid whose first column is sized from this
+    // property, and PostStream's own left padding reads it too, so taking it to
+    // zero flushes the whole post left with no offsets to maintain.
     --avatar-column-width: 0px;
 
-    // The avatar is no longer in a column of its own, so it sits inline at the
-    // head of the post header rather than floating beside the text.
-    .PostUser-avatar {
-      position: relative;
-      float: none;
-      margin: 0 8px 0 0;
-      width: @lrbl-collapsed-avatar;
-      height: @lrbl-collapsed-avatar;
-    }
-
-    .PostUser-avatar .Avatar {
-      width: @lrbl-collapsed-avatar;
-      height: @lrbl-collapsed-avatar;
-      // Half the avatar, written out: Less 4 disables `/` division outside
-      // parentheses, and a stylesheet that fails to compile takes the whole
-      // forum's CSS with it.
-      font-size: 16px;
-    }
-
-    // Header and body both start at the left edge now there is nothing to
-    // make room for.
-    .Post-header,
-    .Post-body,
-    .Post-footer,
-    .Post-actions {
-      margin-left: 0;
-      padding-left: 0;
-    }
-
-    .Post-header {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 4px 8px;
+    // The avatar goes with the column, which is exactly what core does on a
+    // phone (@phone hides .Post-avatar). It is not optional: the avatar is not
+    // inside the grid cell, so leaving it visible drops it on top of the
+    // username. That is why the hand-rolled versions of this need pixel offsets
+    // on the header to shift the text clear of it.
+    .Post-avatar {
+      display: none;
     }
   }
 
@@ -434,14 +407,6 @@
     .lrbl-collapse();
   }
 
-  // The badges came up into the header with everything else, so the column
-  // rules above must not also apply to them.
-  .lrBadgeLabels--collapsed .PostUser-badges.LrBadgeLabels-list {
-    float: none;
-    position: relative;
-    margin: 0;
-    width: auto;
-  }
 
 }
 
