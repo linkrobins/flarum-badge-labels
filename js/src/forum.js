@@ -34,6 +34,8 @@ const HEADER_POSITIONS = ['after', 'before'];
 const DEFAULT_HEADER_POSITION = 'after';
 const ARRANGEMENTS = ['rows', 'centered', 'grid'];
 const DEFAULT_ARRANGEMENT = 'rows';
+const COLLAPSE_MODES = ['off', 'first', 'all'];
+const DEFAULT_COLLAPSE = 'off';
 const LABEL_MODES = ['all', 'first', 'none'];
 const DEFAULT_LABELS = 'all';
 const POST_COUNT_PLACEMENTS = ['badges', 'below', 'beside'];
@@ -100,6 +102,7 @@ function settings() {
   const width = parseInt(forumAttribute(ATTR + 'ColumnWidth', DEFAULT_COLUMN_WIDTH), 10);
   const gap = parseInt(forumAttribute(ATTR + 'AvatarGap', DEFAULT_AVATAR_GAP), 10);
   const placement = String(forumAttribute(ATTR + 'PostCountPlacement', DEFAULT_POST_COUNT_PLACEMENT));
+  const collapse = String(forumAttribute(ATTR + 'Collapse', DEFAULT_COLLAPSE));
 
   // Up to v1.0.1 the labels setting was a checkbox, and a forum that upgrades
   // still has a boolean in the payload until the admin saves the page again.
@@ -117,6 +120,7 @@ function settings() {
     phone: truthy(forumAttribute(ATTR + 'Phone', false)),
     columnWidth: Math.max(MIN_COLUMN_WIDTH, Math.min(MAX_COLUMN_WIDTH, isNaN(width) ? DEFAULT_COLUMN_WIDTH : width)),
     avatarGap: Math.max(MIN_AVATAR_GAP, Math.min(MAX_AVATAR_GAP, isNaN(gap) ? DEFAULT_AVATAR_GAP : gap)),
+    collapse: COLLAPSE_MODES.indexOf(collapse) >= 0 ? collapse : DEFAULT_COLLAPSE,
   };
 
   // The count either follows the badges or has a placement of its own.
@@ -140,7 +144,20 @@ function headerHasContent(s) {
 // Everything the stylesheet keys off lives on the root element, so the CSS
 // never has to care which settings produced a given post.
 function applyRootClasses() {
-  const s = settings();
+  const raw = settings();
+
+  // Collapsing the author column removes the place the 'below' layout puts
+  // badges, so the two cannot both be honoured. Collapsing wins and the badges
+  // move up beside the username, which is the only spot left once the column
+  // is gone. Everything downstream reads the effective values, so the rest of
+  // this function needs no special cases.
+  const collapsed = raw.collapse !== 'off';
+  const s = collapsed
+    ? Object.assign({}, raw, {
+        layout: 'beside',
+        countLayout: raw.countLayout === 'below' ? 'beside' : raw.countLayout,
+      })
+    : raw;
   const root = document.documentElement;
   if (!root || !root.classList) return;
 
@@ -175,6 +192,14 @@ function applyRootClasses() {
   // 2.x exposes the author column width as a custom property, so widening it is
   // one line in the stylesheet behind this class.
   classes.push('lrBadgeLabels--v2');
+
+  if (collapsed) {
+    classes.push('lrBadgeLabels--collapsed');
+
+    // Only the opening post, which is the common case: it gives a discussion a
+    // header without turning every reply into one.
+    if (raw.collapse === 'first') classes.push('lrBadgeLabels--collapsedFirst');
+  }
 
   classes.forEach((name) => root.classList.add(name));
   root.style.setProperty('--lrbl-column-width', s.columnWidth + 'px');

@@ -229,6 +229,9 @@
   content: '\200B';
 }
 
+// How big the avatar is once it moves out of the column and into the header.
+@lrbl-collapsed-avatar: 32px;
+
 @media @tablet-up {
   .PostUser-badges.LrBadgeLabels-list {
     .lrbl-flow();
@@ -365,6 +368,79 @@
   // line and everything that reads it (the post grid, the time gaps) follows.
   .lrBadgeLabels--v2.lrBadgeLabels--wide {
     --avatar-column-width: var(--lrbl-column-width, 150px);
+  }
+
+  // ---------------------------------------------------------------------
+  // Collapsing the author column
+  //
+  // Flarum sizes the author column from --avatar-column-width, so taking it to
+  // zero is the whole trick: the avatar moves up into the post header and the
+  // post reads the way it already does on a phone. Grown from a CSS tweak by
+  // Tutrix on the Flarum community forum, discuss d/39663.
+  //
+  // --collapsed      applies to every post
+  // --collapsedFirst narrows that to a discussion's opening post
+  //
+  // The selector is written once and reused for both, so the two modes cannot
+  // drift apart. `.lrbl-collapse()` is called with the scope to apply it to.
+  // ---------------------------------------------------------------------
+  .lrbl-collapse() {
+    --avatar-column-width: 0px;
+
+    // The avatar is no longer in a column of its own, so it sits inline at the
+    // head of the post header rather than floating beside the text.
+    .PostUser-avatar {
+      position: relative;
+      float: none;
+      margin: 0 8px 0 0;
+      width: @lrbl-collapsed-avatar;
+      height: @lrbl-collapsed-avatar;
+    }
+
+    .PostUser-avatar .Avatar {
+      width: @lrbl-collapsed-avatar;
+      height: @lrbl-collapsed-avatar;
+      // Half the avatar, written out: Less 4 disables `/` division outside
+      // parentheses, and a stylesheet that fails to compile takes the whole
+      // forum's CSS with it.
+      font-size: 16px;
+    }
+
+    // Header and body both start at the left edge now there is nothing to
+    // make room for.
+    .Post-header,
+    .Post-body,
+    .Post-footer,
+    .Post-actions {
+      margin-left: 0;
+      padding-left: 0;
+    }
+
+    .Post-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+    }
+  }
+
+  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .Post-container {
+    .lrbl-collapse();
+  }
+
+  // Only the opening post. Flarum puts the post number on the stream item, so
+  // this needs no marker of its own.
+  .lrBadgeLabels--collapsedFirst .PostStream-item[data-number='1'] .Post-container {
+    .lrbl-collapse();
+  }
+
+  // The badges came up into the header with everything else, so the column
+  // rules above must not also apply to them.
+  .lrBadgeLabels--collapsed .PostUser-badges.LrBadgeLabels-list {
+    float: none;
+    position: relative;
+    margin: 0;
+    width: auto;
   }
 
 }

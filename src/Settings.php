@@ -26,6 +26,7 @@ final class Settings
     public const COLUMN_WIDTH = self::PREFIX.'column_width';
     public const AVATAR_GAP = self::PREFIX.'avatar_gap';
     public const DISCUSSION_BADGES = self::PREFIX.'discussion_badges';
+    public const COLLAPSE = self::PREFIX.'collapse';
 
     /**
      * Where the badges sit: in a column below the avatar, or in the header row
@@ -88,6 +89,18 @@ final class Settings
      * Which badges carry their title: all of them, only the first (a user's
      * primary badge, which is the one most forums want spelled out), or none.
      */
+    /**
+     * Collapsing the author column away on desktop, so posts read the way they
+     * already do on a phone.
+     *
+     *   off   leave Flarum's author column alone
+     *   first only on a discussion's opening post
+     *   all   on every post
+     */
+    public const COLLAPSE_MODES = ['off', 'first', 'all'];
+
+    public const DEFAULT_COLLAPSE = 'off';
+
     public const LABEL_MODES = ['all', 'first', 'none'];
 
     public const DEFAULT_LABELS = 'all';
@@ -143,6 +156,13 @@ final class Settings
     /**
      * @param mixed $value
      */
+    public static function collapse($value): string
+    {
+        $collapse = is_string($value) ? $value : '';
+
+        return in_array($collapse, self::COLLAPSE_MODES, true) ? $collapse : self::DEFAULT_COLLAPSE;
+    }
+
     public static function labels($value): string
     {
         if (is_bool($value)) {
