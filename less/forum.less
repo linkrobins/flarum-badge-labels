@@ -547,12 +547,15 @@
   // BOTH on, and the header copy then sits inside the username link as a 34px
   // block, which pushes the username onto its own line under it.
   .Post-side .Post-avatar {
-    display: block;
+    // inline-flex, NOT block. Core centres the fallback initial with
+    // `display: inline-flex; align-items: center; justify-content: center` on
+    // .Avatar, so overriding the display to block drops the centring and the
+    // letter sits in the top-left corner of the circle. This only needs to
+    // undo core's `display: none` on phones, so restore the value core uses.
+    display: inline-flex;
 
-    // Core sizes an avatar from a --size custom property and derives the
-    // width, height and the font-size of the initial from it. Setting width
-    // and height by hand leaves the initial sized for the old avatar and it
-    // spills out of the circle, so use core's own mixin.
+    // Core derives width, height and the initial's font-size from a --size
+    // custom property, so resize through its mixin rather than by hand.
     .Avatar--size(@lrbl-inline-avatar);
   }
 
