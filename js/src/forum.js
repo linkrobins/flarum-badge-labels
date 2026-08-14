@@ -126,6 +126,19 @@ function settings() {
   // The count either follows the badges or has a placement of its own.
   cached.countLayout = cached.postCountPlacement === 'badges' ? cached.layout : cached.postCountPlacement;
 
+  // Collapsing the author column removes the place the 'below' layout puts
+  // things, so the two cannot both be honoured: collapsing wins and anything
+  // that would have gone in the column moves up beside the username.
+  //
+  // Resolved HERE rather than at the point the classes are set, because the
+  // code that decides which list to render into which slot reads these same
+  // values. Overriding in one place and not the other renders the badges into
+  // a column that is no longer there.
+  if (cached.collapse !== 'off') {
+    cached.layout = 'beside';
+    if (cached.countLayout === 'below') cached.countLayout = 'beside';
+  }
+
   return cached;
 }
 
@@ -144,20 +157,8 @@ function headerHasContent(s) {
 // Everything the stylesheet keys off lives on the root element, so the CSS
 // never has to care which settings produced a given post.
 function applyRootClasses() {
-  const raw = settings();
-
-  // Collapsing the author column removes the place the 'below' layout puts
-  // badges, so the two cannot both be honoured. Collapsing wins and the badges
-  // move up beside the username, which is the only spot left once the column
-  // is gone. Everything downstream reads the effective values, so the rest of
-  // this function needs no special cases.
-  const collapsed = raw.collapse !== 'off';
-  const s = collapsed
-    ? Object.assign({}, raw, {
-        layout: 'beside',
-        countLayout: raw.countLayout === 'below' ? 'beside' : raw.countLayout,
-      })
-    : raw;
+  const s = settings();
+  const collapsed = s.collapse !== 'off';
   const root = document.documentElement;
   if (!root || !root.classList) return;
 
@@ -198,7 +199,7 @@ function applyRootClasses() {
 
     // Only the opening post, which is the common case: it gives a discussion a
     // header without turning every reply into one.
-    if (raw.collapse === 'first') classes.push('lrBadgeLabels--collapsedFirst');
+    if (s.collapse === 'first') classes.push('lrBadgeLabels--collapsedFirst');
   }
 
   classes.forEach((name) => root.classList.add(name));
