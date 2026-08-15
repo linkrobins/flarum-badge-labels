@@ -40,7 +40,7 @@ You can apply it to every post, or only to the opening post of a discussion, whi
 
 Two things worth knowing before you turn it on:
 
-- **It applies on phones as well as desktops.** That is the point: your forum reads the same on both, rather than one layout per screen size.
+- **It applies on phones as well as desktops**, but not identically, because a phone has no author column to remove in the first place. There, this only puts the avatar back, on every post. So **on a phone the two modes look the same; choosing the opening post only changes desktop.** That way switching modes never makes avatars appear and disappear on phones.
 - **It moves badges beside the username.** "Below the avatar" needs a column to sit in, so when the column goes, anything that lived in it comes up to the header line. That also makes **Author column width** and **Gap below the avatar** do nothing while it is on.
 
 The idea comes from a CSS tweak by Tutrix on the Flarum community forum: https://discuss.flarum.org/d/39663-remove-the-avatar-column-just-like-in-the-mobile-view

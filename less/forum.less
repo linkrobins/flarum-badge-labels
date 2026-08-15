@@ -564,12 +564,30 @@
   }
 }
 
-.lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .Post-container {
-  .lrbl-collapse();
+// Phones first. There is no author column on a phone to begin with, so the
+// first-post-or-every-post choice has nothing to act on: all this can do there
+// is put the avatar back. It does that for EVERY post whenever the option is
+// on, so a phone never ends up showing an avatar on the opening post and none
+// on the replies.
+//
+// The practical rule, and what the setting's help text says: on phones this
+// always looks the same, and the choice only changes desktop.
+@media @phone {
+  .lrBadgeLabels--collapsed .Post-container {
+    .lrbl-collapse();
+  }
 }
 
-// Only the opening post. Flarum already puts the post number on the stream
-// item, so this needs no marker of its own.
-.lrBadgeLabels--collapsedFirst .PostStream-item[data-number='1'] .Post-container {
-  .lrbl-collapse();
+// Desktop and up is where a column actually exists, so this is where the choice
+// means something.
+@media @tablet-up {
+  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .Post-container {
+    .lrbl-collapse();
+  }
+
+  // Only the opening post. Flarum already puts the post number on the stream
+  // item, so this needs no marker of its own.
+  .lrBadgeLabels--collapsedFirst .PostStream-item[data-number='1'] .Post-container {
+    .lrbl-collapse();
+  }
 }
