@@ -20,6 +20,7 @@ Every badge is covered, not just group badges: the title comes from whatever eac
 
 | Setting | Default | What it does |
 | --- | --- | --- |
+| Remove the avatar column | Off | Off, the first post of a discussion only, or every post. See below |
 | Badge placement | Below the avatar | Below the avatar, or beside the username |
 | Badge position on the header line | After the time | Which side of the post's time the badges sit on |
 | Badge arrangement | One per row | How the badges under the avatar are laid out: one per row, centered, or centered with icons sharing rows |
@@ -30,6 +31,19 @@ Every badge is covered, not just group badges: the title comes from whatever eac
 | Author column width | 150px | How much room the column below the avatar gets (85 to 400) |
 | Gap below the avatar | 4px | The space between the avatar and the first badge under it (0 to 60) |
 | Apply on phones too | Off | Show titles and the post count on phones as well |
+
+### Removing the avatar column
+
+Flarum reserves a column down the left of every post for the avatar, and on a wide screen that is a lot of empty space beside a short reply. Turning this on takes the column away. The avatar keeps its normal size and overhangs into the space that frees up, and the text closes up around it, so the post reads the way it already does on a phone.
+
+You can apply it to every post, or only to the opening post of a discussion, which gives a thread a header without turning every reply into one.
+
+Two things worth knowing before you turn it on:
+
+- **It is desktop only.** A phone has no author column to remove in the first place, so phones are left exactly as Flarum draws them. Both modes change nothing there.
+- **It moves badges beside the username.** "Below the avatar" needs a column to sit in, so when the column goes, anything that lived in it comes up to the header line. That also makes **Author column width** and **Gap below the avatar** do nothing while it is on.
+
+The idea comes from a CSS tweak by Tutrix on the Flarum community forum: https://discuss.flarum.org/d/39663-remove-the-avatar-column-just-like-in-the-mobile-view
 
 ## Compatibility
 

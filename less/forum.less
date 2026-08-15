@@ -367,6 +367,8 @@
     --avatar-column-width: var(--lrbl-column-width, 150px);
   }
 
+
+
 }
 
 @media @phone {
@@ -487,6 +489,107 @@
     .LrBadgeLabels-list--row {
       display: flex;
       margin: 0 0 2px;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------
+// Collapsing the author column
+//
+// This is Tutrix's CSS from the Flarum community forum (discuss d/39663),
+// adopted as-is rather than reinterpreted. Notably it does NOT resize the
+// avatar: it stays at Flarum's 64px, the column around it goes to zero, and
+// the header is pushed clear of it. That is what people in that thread are
+// already running.
+//
+// Their breakpoint is min-width 768px, which is exactly core's @tablet-up, so
+// the media query is core's variable rather than a repeated literal.
+//
+//   --collapsed      applies to every post
+//   --collapsedFirst narrows that to a discussion's opening post
+// -----------------------------------------------------------------------
+.lrbl-collapse() {
+  // Flarum sizes the author column from this property and PostStream's left
+  // padding reads it too, so zero is the whole mechanism.
+  --avatar-column-width: 0px;
+
+  // The avatar keeps its size and its place in the (now zero-width) column, so
+  // it overhangs into the space that frees up. The header is moved clear of it
+  // rather than the avatar being shrunk to fit.
+  .Post-header:not(.item-bestAnswerPost .Post-header) {
+    position: relative;
+    left: 70px;
+    margin-top: 20px;
+    margin-right: 70px;
+    margin-bottom: 30px;
+    padding-bottom: 5px;
+    width: fit-content;
+  }
+
+  .Post-header > ul > li.item-isBestAnswer {
+    margin-top: -4px;
+  }
+
+  // Core fixes this list at 64px, sized for the column. With the column gone it
+  // should be as wide as its contents.
+  .PostUser-badges {
+    width: fit-content;
+    margin-right: 5px;
+  }
+}
+
+// The reply box carries its own offsets in the original, slightly different
+// from a post's.
+.lrbl-collapse-reply() {
+  --avatar-column-width: 0px;
+
+  .Post-header {
+    position: relative;
+    left: 85px;
+    margin-top: 15px;
+    margin-right: 65px;
+    padding-bottom: 5px;
+    width: fit-content;
+  }
+}
+
+// Desktop only, which is where a column exists. Tutrix's tweak is scoped the
+// same way: a phone has no author column to remove.
+@media @tablet-up {
+  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) {
+    .Post-container {
+      .lrbl-collapse();
+    }
+
+    .ReplyPlaceholder .Post-container {
+      .lrbl-collapse-reply();
+    }
+  }
+
+  // Only the opening post. Flarum already puts the post number on the stream
+  // item, so this needs no marker of its own.
+  .lrBadgeLabels--collapsedFirst .PostStream-item[data-number='1'] .Post-container {
+    .lrbl-collapse();
+  }
+
+  // Event posts (a rename, a lock, an auto-lock note) keep their column.
+  //
+  // They put a 64px icon where the avatar goes. Flarum 2.0 lays a post out as a
+  // grid, and grid items ignore the `float: left` core gives that icon, so with
+  // the column at zero the icon has nowhere to sit and lands on top of the
+  // text. Tutrix's tweak predates the grid layout and does not cover event
+  // posts, so this is ours: the icon keeps its 64px, which lines it up with
+  // where the avatars now overhang.
+  //
+  // Only the every-post mode needs this. In first-post-only the opening post is
+  // always a comment, so no event post is ever collapsed.
+  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .EventPost .Post-container {
+    --avatar-column-width: 64px;
+
+    // Core right-aligns the icon inside its 64px, which puts the glyph hard
+    // against the text now that the gap the column used to provide is gone.
+    .EventPost-icon {
+      padding-right: 10px;
     }
   }
 }

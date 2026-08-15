@@ -13,6 +13,18 @@ const trans = (key) => app.translator.trans(EXT_ID + '.admin.settings.' + key);
 function settings() {
   return [
     {
+      setting: PREFIX + 'collapse',
+      label: trans('collapse_label'),
+      help: trans('collapse_help'),
+      type: 'select',
+      options: {
+        off: trans('collapse_off'),
+        first: trans('collapse_first'),
+        all: trans('collapse_all'),
+      },
+      default: 'off',
+    },
+    {
       setting: PREFIX + 'layout',
       label: trans('layout_label'),
       help: trans('layout_help'),

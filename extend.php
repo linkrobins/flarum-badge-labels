@@ -46,5 +46,8 @@ return [
         ->serializeToForum('linkrobinsBadgeLabelsColumnWidth', Settings::COLUMN_WIDTH, fn ($value) => Settings::columnWidth($value))
 
         ->default(Settings::AVATAR_GAP, (string) Settings::DEFAULT_AVATAR_GAP)
-        ->serializeToForum('linkrobinsBadgeLabelsAvatarGap', Settings::AVATAR_GAP, fn ($value) => Settings::avatarGap($value)),
+        ->serializeToForum('linkrobinsBadgeLabelsAvatarGap', Settings::AVATAR_GAP, fn ($value) => Settings::avatarGap($value))
+
+        ->default(Settings::COLLAPSE, Settings::DEFAULT_COLLAPSE)
+        ->serializeToForum('linkrobinsBadgeLabelsCollapse', Settings::COLLAPSE, fn ($value) => Settings::collapse($value)),
 ];
