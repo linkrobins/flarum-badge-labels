@@ -585,5 +585,11 @@
   // always a comment, so no event post is ever collapsed.
   .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .EventPost .Post-container {
     --avatar-column-width: 64px;
+
+    // Core right-aligns the icon inside its 64px, which puts the glyph hard
+    // against the text now that the gap the column used to provide is gone.
+    .EventPost-icon {
+      padding-right: 10px;
+    }
   }
 }
