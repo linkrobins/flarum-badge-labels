@@ -496,93 +496,74 @@
 // -----------------------------------------------------------------------
 // Collapsing the author column
 //
-// Flarum reserves a fixed column down the left of every post, sized from
-// --avatar-column-width, and puts the avatar in it. This takes the column away
-// and floats the avatar at the head of the post instead, so the text closes up
-// around it.
+// This is Tutrix's CSS from the Flarum community forum (discuss d/39663),
+// adopted as-is rather than reinterpreted. Notably it does NOT resize the
+// avatar: it stays at Flarum's 64px, the column around it goes to zero, and
+// the header is pushed clear of it. That is what people in that thread are
+// already running.
 //
-// Deliberately OUTSIDE any media query. Core hides the avatar on phones and
-// keeps the column on desktop, so a forum reads differently on the two; the
-// point of this option is that it reads the same on both.
-//
-// Grown from a CSS tweak by Tutrix on the Flarum community forum, d/39663.
+// Their breakpoint is min-width 768px, which is exactly core's @tablet-up, so
+// the media query is core's variable rather than a repeated literal.
 //
 //   --collapsed      applies to every post
 //   --collapsedFirst narrows that to a discussion's opening post
 // -----------------------------------------------------------------------
-@lrbl-inline-avatar: 34px;
-
 .lrbl-collapse() {
-  // Nothing is reserving space any more: PostStream's left padding reads this
-  // property too, so the post flushes left on its own.
+  // Flarum sizes the author column from this property and PostStream's left
+  // padding reads it too, so zero is the whole mechanism.
   --avatar-column-width: 0px;
 
-  // The container is a grid by default, with the avatar in column one. Block
-  // layout is what lets a float work.
-  display: block;
-
-  .Post-side {
-    float: left;
-    width: auto;
-    margin: 0 10px 2px 0;
+  // The avatar keeps its size and its place in the (now zero-width) column, so
+  // it overhangs into the space that frees up. The header is moved clear of it
+  // rather than the avatar being shrunk to fit.
+  .Post-header:not(.item-bestAnswerPost .Post-header) {
+    position: relative;
+    left: 70px;
+    margin-top: 20px;
+    margin-right: 70px;
+    margin-bottom: 30px;
+    padding-bottom: 5px;
+    width: fit-content;
   }
 
-  // Core makes the header a flex container, which establishes its own
-  // formatting context and therefore refuses to overlap a float: the header
-  // gets pushed BELOW the avatar instead of sitting beside it. Normal flow is
-  // what lets the line boxes shorten and wrap around it.
+  .Post-header > ul > li.item-isBestAnswer {
+    margin-top: -4px;
+  }
+
+  // Core fixes this list at 64px, sized for the column. With the column gone it
+  // should be as wide as its contents.
+  .PostUser-badges {
+    width: fit-content;
+    margin-right: 5px;
+  }
+}
+
+// The reply box carries its own offsets in the original, slightly different
+// from a post's.
+.lrbl-collapse-reply() {
+  --avatar-column-width: 0px;
+
   .Post-header {
-    display: block;
-  }
-
-  .Post-header > ul {
-    display: inline;
-  }
-
-  // Flarum ships TWO avatars per post: one in .Post-side (the column) and one
-  // inside .PostUser in the header. Core shows exactly one at a time, hiding
-  // .Post-header .Post-avatar on desktop and .Post-side .Post-avatar on phones.
-  //
-  // Be explicit about which, at every width. A blanket .Post-avatar rule turns
-  // BOTH on, and the header copy then sits inside the username link as a 34px
-  // block, which pushes the username onto its own line under it.
-  .Post-side .Post-avatar {
-    // inline-flex, NOT block. Core centres the fallback initial with
-    // `display: inline-flex; align-items: center; justify-content: center` on
-    // .Avatar, so overriding the display to block drops the centring and the
-    // letter sits in the top-left corner of the circle. This only needs to
-    // undo core's `display: none` on phones, so restore the value core uses.
-    display: inline-flex;
-
-    // Core derives width, height and the initial's font-size from a --size
-    // custom property, so resize through its mixin rather than by hand.
-    .Avatar--size(@lrbl-inline-avatar);
-  }
-
-  .Post-header .Post-avatar {
-    display: none;
+    position: relative;
+    left: 85px;
+    margin-top: 15px;
+    margin-right: 65px;
+    padding-bottom: 5px;
+    width: fit-content;
   }
 }
 
-// Phones first. There is no author column on a phone to begin with, so the
-// first-post-or-every-post choice has nothing to act on: all this can do there
-// is put the avatar back. It does that for EVERY post whenever the option is
-// on, so a phone never ends up showing an avatar on the opening post and none
-// on the replies.
-//
-// The practical rule, and what the setting's help text says: on phones this
-// always looks the same, and the choice only changes desktop.
-@media @phone {
-  .lrBadgeLabels--collapsed .Post-container {
-    .lrbl-collapse();
-  }
-}
-
-// Desktop and up is where a column actually exists, so this is where the choice
-// means something.
+// Desktop only, which is where a column exists. Tutrix's tweak is scoped the
+// same way: a phone has no author column to remove.
 @media @tablet-up {
-  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .Post-container {
-    .lrbl-collapse();
+  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) {
+    .Post-container {
+      .lrbl-collapse();
+    }
+
+    .ReplyPlaceholder .Post-container {
+      .lrbl-collapse-reply();
+    }
   }
 
   // Only the opening post. Flarum already puts the post number on the stream
