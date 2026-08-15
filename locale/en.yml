@@ -8,7 +8,7 @@ linkrobins-badge-labels:
   admin:
     settings:
       collapse_label: "Remove the avatar column on desktop"
-      collapse_help: "Drops the wide column of empty space on the left of every post, so posts read the way they already do on a phone. Badges and the post count move up beside the username, because the column they sat in is gone. Phones have no such column, so there this only puts the avatar back, on every post: the choice below changes desktop only."
+      collapse_help: "Drops the wide column of empty space on the left of every post, so posts read the way they already do on a phone. The avatar keeps its size and the text closes up around it. Badges and the post count move up beside the username, because the column they sat in is gone. Desktop only: a phone has no such column, so phones are left exactly as they are."
       collapse_off: "Keep the avatar column (default)"
       collapse_first: "Remove it on the first post of a discussion only"
       collapse_all: "Remove it on every post"
