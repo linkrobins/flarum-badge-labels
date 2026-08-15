@@ -163,6 +163,9 @@ final class Settings
         return in_array($collapse, self::COLLAPSE_MODES, true) ? $collapse : self::DEFAULT_COLLAPSE;
     }
 
+    /**
+     * @param mixed $value
+     */
     public static function labels($value): string
     {
         if (is_bool($value)) {
