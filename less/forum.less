@@ -571,4 +571,19 @@
   .lrBadgeLabels--collapsedFirst .PostStream-item[data-number='1'] .Post-container {
     .lrbl-collapse();
   }
+
+  // Event posts (a rename, a lock, an auto-lock note) keep their column.
+  //
+  // They put a 64px icon where the avatar goes. Flarum 2.0 lays a post out as a
+  // grid, and grid items ignore the `float: left` core gives that icon, so with
+  // the column at zero the icon has nowhere to sit and lands on top of the
+  // text. Tutrix's tweak predates the grid layout and does not cover event
+  // posts, so this is ours: the icon keeps its 64px, which lines it up with
+  // where the avatars now overhang.
+  //
+  // Only the every-post mode needs this. In first-post-only the opening post is
+  // always a comment, so no event post is ever collapsed.
+  .lrBadgeLabels--collapsed:not(.lrBadgeLabels--collapsedFirst) .EventPost .Post-container {
+    --avatar-column-width: 64px;
+  }
 }
