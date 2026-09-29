@@ -61,7 +61,7 @@
     },
     "extra": {
         "flarum-extension": {
-            "title": "Link Robins Badge Labels",
+            "title": "LR Badge Labels",
             "category": "feature",
             "icon": {
                 "name": "fas fa-id-badge",
