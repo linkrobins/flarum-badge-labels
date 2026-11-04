@@ -8,11 +8,12 @@ Out of the box Flarum shows badges as small icons tucked over the corner of the 
 
 ## What it does
 
-- **Full badge titles.** Each badge becomes one pill: its icon at the rounded left end, its name at the right, in the badge's own colour with readable text on light and dark badges alike. Title every badge, or only the first one, which is a member's main badge.
+- **Full badge titles.** Each badge becomes one pill: its icon at the rounded left end, its name at the right, in the badge's own color with readable text on light and dark badges alike. Title every badge, or only the first one, which is a member's main badge.
 - **Badge placement.** Put the badges in a column below the avatar (the author column widens to make room), or on the post header line beside the username. On that line they can follow the post's time or sit in front of it, next to the username.
-- **Post count.** Optionally show how many posts the author has written, as a pill of its own in the theme's neutral badge colour, so it is never mistaken for a group. It can follow the badges or take the other placement, so the count sits under the avatar while the badges stay beside the username.
-- **Discussion badges.** Optionally give the same pills to a discussion's own badges, such as sticky and locked. In the discussion list they move to the line under the title, where there is room for their names.
-- **Phones.** Off by default there, since phones show a compact post header. One switch turns it on.
+- **Post count.** Optionally show how many posts the author has written, as a pill of its own in the theme's neutral badge color, so it is never mistaken for a group. It can follow the badges or take the other placement, so the count sits under the avatar while the badges stay beside the username.
+- **Discussion badges.** Optionally move a discussion's own badges, such as sticky and locked, from the narrow strip over its avatar in the discussion list to the line under the title, where there is room for their names. Whether they are named there follows the full-titles setting, so you can move them and still keep them as plain icons.
+- **Badge arrangement.** Under the avatar, badges can sit one per row, one per row centered, or centered with icon-only badges sharing rows so a column of icons reads as a block.
+- **Phones.** Off by default there, since phones show a compact post header where Flarum tucks the badges over the avatar. One switch turns titles and the post count on there.
 
 Every badge is covered, not just group badges: the title comes from whatever each badge already tells Flarum its name is, so badges added by other extensions get labelled too. Badges that have no name are left as plain icons.
 
@@ -20,17 +21,19 @@ Every badge is covered, not just group badges: the title comes from whatever eac
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| Remove the avatar column | Off | Off, the first post of a discussion only, or every post. See below |
+| Remove the avatar column on desktop | Off | Off, the first post of a discussion only, or every post. See below |
 | Badge placement | Below the avatar | Below the avatar, or beside the username |
-| Badge position on the header line | After the time | Which side of the post's time the badges sit on |
-| Badge arrangement | One per row | How the badges under the avatar are laid out: one per row, centered, or centered with icons sharing rows |
+| Badge position on the header line | After the time | Which side of the post's time the badges sit on, or in front of it next to the username. Only used when something is on the header line |
+| Badge arrangement | One per row | How the badges under the avatar are laid out: one per row, one per row centered, or centered with icons sharing rows. Only used when something sits below the avatar |
 | Show full badge titles | On every badge | Every badge, the first badge only, or icons only |
 | Show the author's post count | On | The number of posts the author has written |
 | Post count placement | With the badges | With the badges, below the avatar, or beside the username |
-| Label discussion badges too | Off | The same pills for sticky, locked, and any other discussion badge |
-| Author column width | 150px | How much room the column below the avatar gets (85 to 400) |
-| Gap below the avatar | 4px | The space between the avatar and the first badge under it (0 to 60) |
+| Move discussion badges under the title | Off | Sticky, locked and any other discussion badge move to the line under the title in the discussion list |
+| Author column width | 150px | How much room the column below the avatar gets, 85 to 400 pixels |
+| Gap below the avatar | 4px | The space between the avatar and the first badge under it, 0 to 60 pixels |
 | Apply on phones too | Off | Show titles and the post count on phones as well |
+
+The extension adds no permissions and no database tables.
 
 ### Removing the avatar column
 
@@ -47,7 +50,7 @@ The idea comes from a CSS tweak by Tutrix on the Flarum community forum: https:/
 
 ## Compatibility
 
-This is the **Flarum 2.x** release line. Flarum 1.8 forums install the 1.x line of the same package, which has the same features and the same settings; Composer picks the right one for your forum on its own.
+Requires PHP 8.3 or newer. This is the **Flarum 2.x** release line. Flarum 1.8 forums install the 1.x line of the same package, which has the same features and the same settings; Composer picks the right one for your forum on its own.
 
 Nothing is added to your database and nothing is added to what your forum sends to visitors: the post count is the one Flarum already publishes on member profiles, and the extension only decides whether to draw it.
 
@@ -57,7 +60,7 @@ Nothing is added to your database and nothing is added to what your forum sends 
 composer require linkrobins/badge-labels
 ```
 
-Then enable the extension in the admin panel.
+Then toggle it on in the admin panel's **Extensions** page and open its settings.
 
 ## Updating
 
